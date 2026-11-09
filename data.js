@@ -1,5 +1,8 @@
 // Default Configuration & Mock Data for Master Virtual Office
 const DEFAULT_CONFIG = {
+  security: {
+    adminPin: "7788" // Master PIN for Owner/Admin access
+  },
   profile: {
     name: "Zunaid Ahmed",
     title: "Senior UI/UX Designer & Digital Solutions Architect",

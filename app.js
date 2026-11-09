@@ -9,6 +9,7 @@ let currentCurrency = 'USD'; // 'USD' or 'BDT'
 let activeClientPortal = null;
 let currentFormMode = 'builtin'; // 'builtin' or 'tally'
 let currentLocalPayProvider = 'bkash';
+let currentAdSource = null;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initCurrency();
   renderApp();
   checkUrlForPortalToken();
+  checkUrlForCampaign();
+  setupKeyboardShortcuts();
   initIcons();
 });
 
@@ -493,8 +496,9 @@ function handleProjectOrderSubmit(e) {
   // Show active order banner in Section 5
   const banner = document.getElementById('activeOrderInvoiceBanner');
   const text = document.getElementById('activeOrderInvoiceText');
+  const adTag = currentAdSource ? ` [Source: ${currentAdSource}]` : '';
   if (banner && text) {
-    text.textContent = `Order Initialized for ${name}! Package: ${pkgObj.name} (${price}). Complete payment below.`;
+    text.textContent = `Order Initialized for ${name}! Package: ${pkgObj.name} (${price})${adTag}. Complete payment below.`;
     banner.classList.remove('hidden');
   }
 
@@ -575,6 +579,117 @@ function openVoucherModal() {
 
 function closeVoucherModal() {
   document.getElementById('modalVoucher').classList.add('hidden');
+}
+
+// ---------------- OWNER / ADMIN SECURITY & CAMPAIGNS ----------------
+function isAdminLoggedIn() {
+  return sessionStorage.getItem('virtual_office_admin') === 'true';
+}
+
+function updateAdminVisibility() {
+  const isLogged = isAdminLoggedIn();
+  const navBtn = document.getElementById('navCustomizeBtn');
+  const floatBar = document.getElementById('adminFloatingBar');
+  if (navBtn) navBtn.classList.toggle('hidden', !isLogged);
+  if (floatBar) floatBar.classList.toggle('hidden', !isLogged);
+}
+
+function openAdminLoginModal() {
+  document.getElementById('adminLoginModal').classList.remove('hidden');
+  document.getElementById('adminLoginError').classList.add('hidden');
+  document.getElementById('adminPinInput').value = '';
+  setTimeout(() => document.getElementById('adminPinInput').focus(), 150);
+  initIcons();
+}
+
+function closeAdminLoginModal() {
+  document.getElementById('adminLoginModal').classList.add('hidden');
+}
+
+function handleAdminLogin(e) {
+  e.preventDefault();
+  const enteredPin = document.getElementById('adminPinInput').value.trim();
+  const correctPin = (config.security && config.security.adminPin) ? config.security.adminPin : "7788";
+
+  if (enteredPin === correctPin) {
+    sessionStorage.setItem('virtual_office_admin', 'true');
+    closeAdminLoginModal();
+    updateAdminVisibility();
+    openAdminDrawer();
+    showToast("👑 Owner Mode Unlocked! All settings enabled.");
+  } else {
+    const err = document.getElementById('adminLoginError');
+    err.textContent = "❌ Invalid PIN. Please try again.";
+    err.classList.remove('hidden');
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('virtual_office_admin');
+  closeAdminDrawer();
+  updateAdminVisibility();
+  showToast("🔒 Exited Owner Mode. You are now in Public Client View.");
+}
+
+function setupKeyboardShortcuts() {
+  window.addEventListener('keydown', (e) => {
+    // Ctrl + Shift + A or Cmd + Shift + A
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+      e.preventDefault();
+      if (isAdminLoggedIn()) {
+        openAdminDrawer();
+      } else {
+        openAdminLoginModal();
+      }
+    }
+  });
+}
+
+function checkUrlForCampaign() {
+  const params = new URLSearchParams(window.location.search);
+  
+  // Check if admin param requested
+  if (params.get('admin') === 'login' || params.get('admin') === 'true') {
+    if (!isAdminLoggedIn()) {
+      openAdminLoginModal();
+    } else {
+      updateAdminVisibility();
+      openAdminDrawer();
+    }
+  } else {
+    updateAdminVisibility();
+  }
+
+  // Check for Ad Campaigns (Meta Ads, Google Ads, etc.)
+  const source = params.get('utm_source') || params.get('ad') || params.get('ref');
+  const campaign = params.get('utm_campaign') || '';
+
+  if (source) {
+    currentAdSource = `${source} (${campaign || 'Direct Ad'})`;
+    const banner = document.getElementById('adCampaignBanner');
+    const badge = document.getElementById('adCampaignSourceBadge');
+    const msg = document.getElementById('adCampaignMessage');
+
+    if (banner) {
+      banner.classList.remove('hidden');
+      const srcLow = source.toLowerCase();
+      if (srcLow.includes('meta') || srcLow.includes('fb') || srcLow.includes('facebook') || srcLow.includes('instagram')) {
+        badge.textContent = "🎯 Meta Ads Special";
+        msg.textContent = `Welcome from Meta! Book a Free 15-Minute Live Strategy Call with ${config.profile.name} today.`;
+      } else if (srcLow.includes('google') || srcLow.includes('adwords') || srcLow.includes('gads')) {
+        badge.textContent = "🔍 Google Ads Special";
+        msg.textContent = `Welcome from Google Search! Claim your Free Project Consultation with ${config.profile.name}.`;
+      } else {
+        badge.textContent = `🎯 ${source.toUpperCase()} Special`;
+        msg.textContent = `Exclusive Project Consultation with ${config.profile.name}. Explore packages below.`;
+      }
+      initIcons();
+    }
+  }
+}
+
+function dismissAdBanner() {
+  document.getElementById('adCampaignBanner').classList.add('hidden');
 }
 
 // ---------------- SECTION 6: STRICT PRIVATE CLIENT PORTAL [UPDATED] ----------------
@@ -810,10 +925,16 @@ function populateAdminFields() {
   document.getElementById('cfgNagadNumber').value = config.payments.nagadNumber || '';
   document.getElementById('cfgQrCodeUrl').value = config.payments.qrCodeUrl || '';
 
+  // Security Master PIN
+  document.getElementById('cfgAdminPin').value = (config.security && config.security.adminPin) ? config.security.adminPin : "7788";
+
   renderAdminClientList();
 }
 
 function saveAdminChanges() {
+  if (!config.security) config.security = {};
+  config.security.adminPin = document.getElementById('cfgAdminPin').value.trim() || "7788";
+
   config.profile.name = document.getElementById('cfgName').value;
   config.profile.title = document.getElementById('cfgTitle').value;
   config.profile.avatar = document.getElementById('cfgAvatar').value;
