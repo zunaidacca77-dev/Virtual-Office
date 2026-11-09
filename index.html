@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Virtual Office & Agency Portal</title>
+  
+  <!-- Google Fonts: Inter / Plus Jakarta Sans & Hind Siliguri for Bengali -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Hind Siliguri"', 'sans-serif'],
+          },
+          colors: {
+            navy: {
+              50: '#F0F4F8',
+              100: '#D9E2EC',
+              500: '#1B4D89',
+              600: '#0F4C81',
+              700: '#0A3660',
+              800: '#062442',
+              900: '#031427',
+            },
+            accent: {
+              teal: '#0D9488',
+              emerald: '#10B981',
+              amber: '#F59E0B',
+              rose: '#F43F5E',
+              violet: '#6366F1'
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Canvas Confetti for Orders celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.4);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.7);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .dark .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+    }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .dark .glass-nav {
+      background: rgba(10, 15, 30, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-navy-600 selection:text-white transition-colors duration-200 min-h-screen flex flex-col">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="sticky top-0 z-40 w-full glass-nav border-b border-slate-200/80 dark:border-slate-800/80 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Trainee Status Badge -->
+      <div class="flex items-center gap-3">
+        <a href="#hero" class="flex items-center gap-2.5 group">
+          <img id="navAvatar" src="" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-navy-600/30 group-hover:ring-navy-600 transition shadow-sm">
+          <div class="hidden sm:block">
+            <span id="navName" class="font-bold text-sm tracking-tight text-slate-900 dark:text-white block group-hover:text-navy-600 dark:group-hover:text-blue-400 transition leading-tight">Zunaid Ahmed</span>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Virtual Office & Studio</span>
+          </div>
+        </a>
+        
+        <!-- Live Status Pill (Clickable Quick Toggle) -->
+        <button id="navStatusBadge" onclick="toggleOfficeStatus()" title="Click to toggle status" class="ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide transition border shadow-xs hover:scale-105 active:scale-95">
+          <span class="relative flex h-2 w-2">
+            <span id="navStatusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+            <span id="navStatusDot" class="relative inline-flex rounded-full h-2 w-2"></span>
+          </span>
+          <span id="navStatusText">Online</span>
+        </button>
+      </div>
+
+      <!-- Center Nav Links (Desktop) -->
+      <nav class="hidden md:flex items-center gap-1 text-xs lg:text-sm font-semibold text-slate-600 dark:text-slate-300">
+        <a href="#live-lounge" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">📹 Live Cabin</a>
+        <a href="#services" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">🛍️ Services</a>
+        <a href="#portfolio" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">📂 Portfolio</a>
+        <a href="#order-desk" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">📝 Order Desk</a>
+        <a href="#billing" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">💳 Billing</a>
+        <a href="#client-portal" class="px-3 py-1.5 rounded-lg text-accent-violet hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition flex items-center gap-1">
+          <i data-lucide="shield-check" class="w-4 h-4"></i> VIP Portal
+        </a>
+      </nav>
+
+      <!-- Right Action Items -->
+      <div class="flex items-center gap-2">
+        
+        <!-- Currency Switcher ($ USD / ৳ BDT) -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+          <button id="currUSD" onclick="setCurrency('USD')" class="px-2 py-1 rounded-md transition shadow-xs">USD ($)</button>
+          <button id="currBDT" onclick="setCurrency('BDT')" class="px-2 py-1 rounded-md transition">BDT (৳)</button>
+        </div>
+
+        <!-- Dark/Light Mode Toggle -->
+        <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Toggle Dark/Light Mode">
+          <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Admin / Customize Office Drawer Toggle -->
+        <button onclick="openAdminDrawer()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-navy-600 hover:bg-navy-700 text-white shadow-sm hover:shadow transition active:scale-95">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Customize Office</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT CONTAINER ================= -->
+  <main class="flex-grow">
+
+    <!-- ================= SECTION 1: RECEPTION & HERO ZONE ================= -->
+    <section id="hero" class="relative pt-4 pb-12 sm:pt-6 sm:pb-16 overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Banner Container with Overlay -->
+        <div class="relative w-full h-56 sm:h-72 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800">
+          <img id="heroCover" src="" alt="Office Cover Banner" class="w-full h-full object-cover transform hover:scale-105 transition duration-700">
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-transparent"></div>
+          
+          <!-- Quick Status Ribbon on Top Right of Cover -->
+          <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md bg-white/20 dark:bg-black/40 text-white border border-white/20 shadow-sm flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i> Trainee Master Studio
+            </span>
+          </div>
+        </div>
+
+        <!-- Floating Profile Card Over Banner -->
+        <div class="relative -mt-16 sm:-mt-20 max-w-5xl mx-auto px-4 sm:px-8">
+          <div class="glass-card rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xl transition-all">
+            
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+              
+              <!-- Avatar with Pulsing Status Ring -->
+              <div class="relative flex-shrink-0 group">
+                <img id="heroAvatar" src="" alt="Trainee Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-md ring-4 ring-white dark:ring-slate-900">
+                <div id="heroStatusDotContainer" class="absolute -bottom-2 -right-2 p-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-md">
+                  <span id="heroStatusDot" class="w-4 h-4 rounded-full block"></span>
+                </div>
+              </div>
+
+              <!-- Profile Details -->
+              <div class="flex-grow space-y-2">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <h1 id="heroHeadline" class="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    Welcome to <span class="text-navy-600 dark:text-blue-400" id="heroName">Zunaid Ahmed</span>'s Virtual Office
+                  </h1>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <i data-lucide="badge-check" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i> Verified Pro
+                  </span>
+                </div>
+
+                <!-- Skill Title -->
+                <p id="heroSkillTitle" class="text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300">
+                  Senior UI/UX Designer & Digital Solutions Architect
+                </p>
+
+                <!-- Interactive Live Status Toggle Banner -->
+                <div class="pt-1">
+                  <div id="heroStatusBanner" onclick="toggleOfficeStatus()" class="cursor-pointer inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold border shadow-xs transition hover:scale-[1.01] active:scale-95">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span id="heroStatusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                      <span id="heroStatusDotLarge" class="relative inline-flex rounded-full h-2.5 w-2.5"></span>
+                    </span>
+                    <span id="heroStatusText">🟢 Office Status: Online (Available for Instant Meeting)</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-normal ml-1">(Click to switch)</span>
+                  </div>
+                </div>
+
+                <!-- Short Bio -->
+                <p id="heroBio" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
+                  I craft high-converting digital interfaces, web applications, and scalable design systems for global brands. Step into my virtual office to collaborate live or kick off your next project below.
+                </p>
+
+                <!-- Trust Badges & Metrics -->
+                <div class="pt-3 flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <span id="heroResponseBadge" class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
+                    ⚡ Typically replies within 15 mins
+                  </span>
+                  <span id="heroRatingBadge" class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
+                    ⭐ 5.0 (48+ Projects Delivered)
+                  </span>
+                  <span class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
+                    <i data-lucide="shield" class="w-3.5 h-3.5 text-accent-emerald"></i> 100% NDA Protected
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 2: INSTANT MEETING & AI FRONT-DESK (LIVE LOUNGE) ================= -->
+    <section id="live-lounge" class="py-12 bg-white dark:bg-slate-900 border-y border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-navy-50 dark:bg-slate-800 text-navy-600 dark:text-blue-400 border border-navy-100 dark:border-slate-700">
+            <i data-lucide="radio" class="w-3.5 h-3.5 text-rose-500 animate-pulse"></i> Live Lounge & Reception
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-2">
+            Instant Face-to-Face Cabin & 24/7 AI Desk
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Need an instant consultation or a quick answer? Connect right away without downloads or calendar delays.
+          </p>
+        </div>
+
+        <!-- 2 Column Responsive Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          
+          <!-- LEFT COLUMN: Direct Meeting Room (Whereby / Gather) -->
+          <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md border-t-4 border-t-navy-600">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 flex items-center justify-center text-navy-600 dark:text-blue-400 shadow-xs">
+                    <i data-lucide="video" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">📹 Enter My Virtual Cabin</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Whereby Instant Video/Audio Meeting Room</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live Desk
+                </span>
+              </div>
+
+              <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200/80 dark:border-slate-700/80 mb-6 text-sm text-slate-600 dark:text-slate-300 space-y-2">
+                <p class="flex items-start gap-2">
+                  <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0"></i>
+                  <span><strong>1-Click Instant Knock:</strong> No software installation needed. Runs directly in your browser.</span>
+                </p>
+                <p class="flex items-start gap-2">
+                  <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0"></i>
+                  <span><strong>Private & Secure:</strong> End-to-end encrypted room with dedicated screen-sharing and audio clarity.</span>
+                </p>
+                <p class="flex items-start gap-2">
+                  <i data-lucide="info" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0"></i>
+                  <span>If I am in a deep work session, please leave a quick brief with my AI assistant or book a calendar slot.</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="space-y-3 pt-2">
+              <button onclick="openWherebyModal()" class="w-full py-3.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 group active:scale-95">
+                <i data-lucide="door-open" class="w-5 h-5 group-hover:rotate-12 transition"></i>
+                <span>[ 🚪 Knock & Enter Live Room ]</span>
+              </button>
+
+              <button onclick="openCalModal()" class="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-2 active:scale-95">
+                <i data-lucide="calendar" class="w-4 h-4 text-navy-600 dark:text-blue-400"></i>
+                <span>[ 📅 Schedule a Meeting (Cal.com) ]</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: 24/7 AI Receptionist + Direct Connect [UPDATED] -->
+          <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md border-t-4 border-t-accent-violet">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 flex items-center justify-center text-accent-violet shadow-xs">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white" id="aiDeskTitle">🤖 Talk to My AI Assistant</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">24/7 Automated Pricing, Briefs & Support</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300">
+                  ⚡ 24/7 Active
+                </span>
+              </div>
+
+              <!-- Interactive AI Chat Window -->
+              <div class="bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-60 mb-4 shadow-inner">
+                <!-- Chat Message History -->
+                <div id="aiChatHistory" class="flex-grow p-3 space-y-2.5 overflow-y-auto text-xs sm:text-sm">
+                  <!-- Initial Greeting Rendered by JS -->
+                </div>
+                <!-- Chat Input Box -->
+                <form id="aiChatForm" onsubmit="handleAIChatSubmit(event)" class="p-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+                  <input type="text" id="aiChatInput" placeholder="Ask about packages, prices or message me..." class="flex-grow px-3 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-navy-600 border border-slate-200 dark:border-slate-700">
+                  <button type="submit" class="px-3 py-1.5 bg-navy-600 hover:bg-navy-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+                    <span>Send</span>
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Direct Connect Fallback Alternatives (Always visible below AI) -->
+            <div class="space-y-2 pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
+              <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">Or connect directly via direct channels</p>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <!-- Button A: Direct WhatsApp -->
+                <a id="btnWhatsAppDirect" href="#" target="_blank" class="py-2.5 px-3 rounded-xl font-semibold text-xs bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-1.5 shadow-xs active:scale-95">
+                  <i data-lucide="message-circle" class="w-4 h-4"></i>
+                  <span>[ 💬 Direct WhatsApp ]</span>
+                </a>
+
+                <!-- Button B: Quick Conversational Inquiry (Tally) -->
+                <button onclick="openTallyModal()" class="py-2.5 px-3 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5 active:scale-95">
+                  <i data-lucide="file-text" class="w-4 h-4 text-accent-violet"></i>
+                  <span>[ ⚡ Quick Inquiry (Tally) ]</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 3: SERVICE CATALOG & PORTFOLIO SHOWCASE (THE SHOWROOM) ================= -->
+    <section id="services" class="py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-12">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-navy-50 dark:bg-slate-800 text-navy-600 dark:text-blue-400 border border-navy-100 dark:border-slate-700">
+            <i data-lucide="layers" class="w-3.5 h-3.5"></i> The Showroom
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-2">
+            Service Packages & Transparent Pricing
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Pick a pre-configured package to kick off immediately, or book a custom strategy session.
+          </p>
+        </div>
+
+        <!-- 3-Column Pricing Cards Grid -->
+        <div id="pricingGrid" class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-20">
+          <!-- Dynamically populated by JS based on current currency -->
+        </div>
+
+        <!-- PORTFOLIO SHOWCASE GALLERY -->
+        <div id="portfolio" class="pt-8 border-t border-slate-200 dark:border-slate-800">
+          
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            <div>
+              <h3 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Recent Works & Case Studies</h3>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Real business results delivered for international clients.</p>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div id="portfolioFilters" class="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-semibold">
+              <button onclick="filterPortfolio('all')" class="px-3 py-1.5 rounded-lg transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs" data-filter="all">All</button>
+              <button onclick="filterPortfolio('uiux')" class="px-3 py-1.5 rounded-lg transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" data-filter="uiux">UI/UX & SaaS</button>
+              <button onclick="filterPortfolio('webdev')" class="px-3 py-1.5 rounded-lg transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" data-filter="webdev">Development</button>
+              <button onclick="filterPortfolio('ecommerce')" class="px-3 py-1.5 rounded-lg transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" data-filter="ecommerce">eCommerce</button>
+              <button onclick="filterPortfolio('branding')" class="px-3 py-1.5 rounded-lg transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white" data-filter="branding">Branding</button>
+            </div>
+          </div>
+
+          <!-- Portfolio Grid (6 Cards) -->
+          <div id="portfolioGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamically populated by JS -->
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 4: PROJECT ONBOARDING & ORDER ZONE ================= -->
+    <section id="order-desk" class="py-16 bg-slate-100/60 dark:bg-slate-900/40 border-y border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-navy-50 dark:bg-slate-800 text-navy-600 dark:text-blue-400 border border-navy-100 dark:border-slate-700">
+            <i data-lucide="clipboard-pen" class="w-3.5 h-3.5"></i> Start a Project Desk
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-2">
+            📝 Submit Your Project Requirements
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Fill in your brief to create your workspace ticket. After submission, you'll be routed to the official billing counter.
+          </p>
+
+          <!-- Toggle Form Mode: Interactive Built-in Form vs Embedded Tally -->
+          <div class="mt-4 inline-flex items-center bg-white dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+            <button id="formModeBuiltin" onclick="setFormMode('builtin')" class="px-3 py-1.5 rounded-lg bg-navy-600 text-white transition shadow-xs">Built-in Fast Form</button>
+            <button id="formModeTally" onclick="setFormMode('tally')" class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Embedded Tally Form</button>
+          </div>
+        </div>
+
+        <!-- Form Container -->
+        <div class="glass-card rounded-2xl p-6 sm:p-10 shadow-xl border border-slate-200/80 dark:border-slate-700/80">
+          
+          <!-- BUILT-IN FORM -->
+          <form id="projectOrderForm" onsubmit="handleProjectOrderSubmit(event)" class="space-y-6">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Client Full Name *
+                </label>
+                <div class="relative">
+                  <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                  <input type="text" id="orderClientName" required placeholder="e.g. David Miller" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-600 text-sm">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Email Address or WhatsApp *
+                </label>
+                <div class="relative">
+                  <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                  <input type="text" id="orderClientContact" required placeholder="e.g. david@apexventures.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-600 text-sm">
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Select Service Package *
+                </label>
+                <div class="relative">
+                  <i data-lucide="package" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                  <select id="orderPackageSelect" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-600 text-sm">
+                    <option value="starter">Starter / Basic ($50 / ৳5,000)</option>
+                    <option value="standard" selected>Standard / Growth Pro ($150 / ৳15,000) [Recommended]</option>
+                    <option value="enterprise">Custom / Enterprise ($450+ / ৳45,000+)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Expected Timeline / Urgency
+                </label>
+                <div class="relative">
+                  <i data-lucide="clock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                  <select id="orderTimelineSelect" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-600 text-sm">
+                    <option value="standard">Standard (Within 5-7 Days)</option>
+                    <option value="urgent">Urgent / Priority (Within 48 Hours)</option>
+                    <option value="flexible">Flexible / Milestone Based</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                Project Brief & Instructions *
+              </label>
+              <textarea id="orderBrief" rows="4" required placeholder="Describe your project goals, target audience, brand guidelines, or specific page sections needed..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-600 text-sm"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                Reference Files, Figma Links or Logo URL
+              </label>
+              <div class="relative">
+                <i data-lucide="paperclip" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                <input type="text" id="orderFilesUrl" placeholder="Paste Google Drive, Dropbox, Figma, or Loom video link" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-navy-600 text-sm">
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button type="submit" class="w-full py-4 px-6 rounded-xl font-bold text-base bg-gradient-to-r from-navy-600 via-blue-600 to-indigo-600 hover:from-navy-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition transform active:scale-[0.99] flex items-center justify-center gap-2">
+                <i data-lucide="rocket" class="w-5 h-5"></i>
+                <span>[ 🚀 Submit Project & Proceed to Payment ]</span>
+              </button>
+              <p class="text-[11px] text-center text-slate-500 dark:text-slate-400 mt-2">
+                🔒 Your information is confidential under standard Freelancer Non-Disclosure Agreement (NDA).
+              </p>
+            </div>
+
+          </form>
+
+          <!-- TALLY EMBEDDED FORM CONTAINER (Hidden by default unless toggled) -->
+          <div id="tallyEmbedContainer" class="hidden">
+            <iframe id="tallyIframe" src="" width="100%" height="520" frameborder="0" marginheight="0" marginwidth="0" title="Project Onboarding Form" class="rounded-xl"></iframe>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 5: OFFICIAL PAYMENT & BILLING COUNTER ================= -->
+    <section id="billing" class="py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-12">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-navy-50 dark:bg-slate-800 text-navy-600 dark:text-blue-400 border border-navy-100 dark:border-slate-700">
+            <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Cash Counter & Billing Desk
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-2">
+            💳 Official Payment & Billing Counter
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Secure international credit card processing and local mobile banking with instant transaction verification.
+          </p>
+
+          <!-- Active Order Summary Banner (Appears when order submitted from Sec 4) -->
+          <div id="activeOrderInvoiceBanner" class="hidden mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 font-semibold flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+              <span id="activeOrderInvoiceText">Project Brief Received! Total Due: $150</span>
+            </div>
+            <button onclick="dismissInvoiceBanner()" class="text-emerald-600 hover:text-emerald-800 text-xs font-bold">Dismiss</button>
+          </div>
+        </div>
+
+        <!-- 2-Column Payment Gateways Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          
+          <!-- OPTION 1: International Clients (Payoneer / Wise / Card) -->
+          <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md border-t-4 border-t-blue-600">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-xs">
+                    <i data-lucide="globe" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Option 1: International Clients</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Card, PayPal, Payoneer & Wise Invoices</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                  Global
+                </span>
+              </div>
+
+              <p class="text-sm text-slate-600 dark:text-slate-300 mb-6">
+                For international clients outside Bangladesh, pay securely via credit/debit card, bank transfer, or Payoneer payment request with zero hidden exchange fees.
+              </p>
+
+              <!-- Gateway Features -->
+              <div class="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-6">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 dark:text-slate-400">Supported Methods:</span>
+                  <span class="font-semibold text-slate-800 dark:text-slate-100">Visa, Mastercard, Wise, Payoneer</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 dark:text-slate-400">Security:</span>
+                  <span class="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i> 256-Bit SSL Encrypted
+                  </span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 dark:text-slate-400">Official Invoice:</span>
+                  <span class="font-semibold text-slate-800 dark:text-slate-100">Automated PDF Receipt</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+              <a id="btnPayInternational" href="#" target="_blank" class="w-full py-3.5 px-4 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 active:scale-95">
+                <i data-lucide="credit-card" class="w-4 h-4"></i>
+                <span>[ 🌐 Pay via Card / International (Payoneer / Wise) ]</span>
+              </a>
+              <button onclick="copyPayoneerEmail()" class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-2">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Copy Official Payoneer Payment Email</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- OPTION 2: Local Clients - Bangladesh (bKash / Nagad / Bank) -->
+          <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md border-t-4 border-t-accent-emerald">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xs">
+                    <i data-lucide="smartphone" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Option 2: Local Clients (Bangladesh)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Instant Mobile Banking: bKash & Nagad</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                  🇧🇩 BDT
+                </span>
+              </div>
+
+              <!-- bKash & Nagad Toggle Tabs -->
+              <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold mb-4">
+                <button id="tabBkash" onclick="switchLocalPayTab('bkash')" class="flex-1 py-1.5 rounded-lg bg-pink-600 text-white transition font-bold shadow-xs flex items-center justify-center gap-1">
+                  <span>bKash (বিকাশ)</span>
+                </button>
+                <button id="tabNagad" onclick="switchLocalPayTab('nagad')" class="flex-1 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition font-bold flex items-center justify-center gap-1">
+                  <span>Nagad (নগদ)</span>
+                </button>
+              </div>
+
+              <!-- Payment Details Display Box with QR Code -->
+              <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center gap-4 mb-4">
+                <!-- QR Code Image -->
+                <div class="p-1.5 bg-white rounded-xl shadow-xs border border-slate-200 flex-shrink-0">
+                  <img id="localPayQr" src="" alt="Payment QR Code" class="w-24 h-24 object-contain">
+                </div>
+
+                <div class="space-y-1 text-center sm:text-left flex-grow">
+                  <span id="localPayProvider" class="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider block">bKash Personal Number</span>
+                  <div class="flex items-center justify-center sm:justify-start gap-2">
+                    <span id="localPayNumber" class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-wider">01711-223344</span>
+                    <button onclick="copyLocalPayNumber()" title="Copy Number" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition text-slate-500">
+                      <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                  <p id="localPayNote" class="text-xs text-slate-500 dark:text-slate-400">
+                    Use "Send Money" or QR Scan from app. Mention your project name in reference.
+                  </p>
+                </div>
+              </div>
+
+              <!-- TrxID Verification Form -->
+              <form id="trxForm" onsubmit="handleTrxVerify(event)" class="space-y-3">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Verify Transaction ID (TrxID)
+                </label>
+                <div class="flex gap-2">
+                  <input type="text" id="trxIdInput" required placeholder="e.g. 9J4K2L8M7" class="flex-grow px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-mono uppercase">
+                  <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 flex-shrink-0 active:scale-95">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Verify</span>
+                  </button>
+                </div>
+              </form>
+
+              <!-- Verification Confirmation Banner -->
+              <div id="trxSuccessBanner" class="hidden mt-3 p-3 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 text-xs font-medium border border-emerald-300 dark:border-emerald-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="badge-check" class="w-4 h-4 text-emerald-600"></i>
+                  <span>TrxID Recorded! Voucher generated.</span>
+                </div>
+                <button onclick="openVoucherModal()" class="underline font-bold text-xs text-emerald-700 dark:text-emerald-300">View Receipt</button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 6: PRIVATE CLIENT DELIVERY & TRACKING PORTAL (STRICT PRIVACY) [UPDATED] ================= -->
+    <section id="client-portal" class="py-16 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-accent-violet border border-indigo-200 dark:border-indigo-800">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Strict Privacy Architecture
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-2">
+            🔒 Private Client Portal Access
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Track real-time progress, review design milestones, and download final project deliverables securely.
+          </p>
+        </div>
+
+        <!-- VIEW A: PUBLIC SECURE GATEWAY CARD (Default View) -->
+        <div id="portalGatewayCard" class="glass-card rounded-2xl p-6 sm:p-10 shadow-xl border border-indigo-200/80 dark:border-indigo-900/60">
+          <div class="max-w-xl mx-auto text-center space-y-4">
+            
+            <div class="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-accent-violet flex items-center justify-center mx-auto shadow-sm">
+              <i data-lucide="key-round" class="w-8 h-8"></i>
+            </div>
+
+            <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+              Client VIP Portal Gateway
+            </h3>
+
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+              To guarantee total privacy and NDA compliance, client workspaces are hidden from public view. Please enter your secret project access code or token provided in your onboarding email.
+            </p>
+
+            <!-- Access Code Form -->
+            <form id="portalTokenForm" onsubmit="handlePortalLogin(event)" class="pt-2 space-y-3">
+              <div class="flex gap-2">
+                <input type="text" id="portalTokenInput" required placeholder="Enter Secret Token (e.g. PRJ-101-DAVID)" class="flex-grow px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-accent-violet text-sm font-mono uppercase text-center tracking-wider">
+                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-accent-violet to-navy-600 hover:from-indigo-700 hover:to-navy-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-1.5 flex-shrink-0 active:scale-95">
+                  <i data-lucide="unlock" class="w-4 h-4"></i>
+                  <span>Enter</span>
+                </button>
+              </div>
+
+              <!-- Error Message Placeholder -->
+              <p id="portalLoginError" class="hidden text-xs font-semibold text-rose-500"></p>
+
+              <!-- Demo Token Pill for Easy Testing -->
+              <div class="pt-2 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <span>Demo Code:</span>
+                <button type="button" onclick="fillDemoToken('PRJ-101-DAVID')" class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-accent-violet hover:underline font-bold">
+                  PRJ-101-DAVID
+                </button>
+                <span>or</span>
+                <button type="button" onclick="fillDemoToken('PRJ-202-EMMA')" class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-accent-violet hover:underline font-bold">
+                  PRJ-202-EMMA
+                </button>
+              </div>
+            </form>
+
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-400">
+              Lost your access token? Contact me directly on WhatsApp to recover your workspace.
+            </div>
+
+          </div>
+        </div>
+
+        <!-- VIEW B: PRIVATE CLIENT PORTAL VIEW (Rendered Only after valid token or direct url ?portal=...) -->
+        <div id="portalActiveView" class="hidden glass-card rounded-2xl p-6 sm:p-10 shadow-2xl border-2 border-accent-violet/60 space-y-8 animate-fadeIn">
+          
+          <!-- Portal Header with Exit Button -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
+            <div>
+              <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-950 text-accent-violet border border-indigo-200 dark:border-indigo-800">
+                <i data-lucide="lock" class="w-3 h-3"></i> Private VIP Client Workspace
+              </span>
+              <h3 id="portalProjectTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
+                FinFlow Mobile UI & Web Dashboard
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Client: <strong id="portalClientName" class="text-slate-800 dark:text-slate-200">David Miller</strong> | Company: <span id="portalClientCompany">Apex Ventures USA</span>
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span id="portalStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                In Progress (Under Review)
+              </span>
+              <button onclick="exitClientPortal()" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition flex items-center gap-1" title="Lock & Return to Public Office">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Exit Portal
+              </button>
+            </div>
+          </div>
+
+          <!-- Component 1: Visual Live Progress Bar & Milestones -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between text-sm">
+              <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <i data-lucide="activity" class="w-4 h-4 text-accent-violet"></i> Milestone Completion Status
+              </span>
+              <span id="portalProgressText" class="font-extrabold text-accent-violet text-base">75%</span>
+            </div>
+
+            <!-- Progress Bar Track -->
+            <div class="w-full h-3.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden p-0.5">
+              <div id="portalProgressBar" class="h-full bg-gradient-to-r from-navy-600 via-indigo-600 to-emerald-500 rounded-full transition-all duration-1000 shadow-sm" style="width: 75%"></div>
+            </div>
+
+            <!-- Milestone Steps Grid -->
+            <div id="portalMilestonesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              <!-- Dynamically populated by JS -->
+            </div>
+          </div>
+
+          <!-- Component 2: Deliverables Box (Google Drive / Figma) -->
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-indigo-50/80 to-blue-50/80 dark:from-slate-800/80 dark:to-indigo-950/40 border border-indigo-200 dark:border-indigo-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 text-center sm:text-left">
+              <div class="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 text-navy-600 dark:text-blue-400 flex items-center justify-center shadow-sm flex-shrink-0">
+                <i data-lucide="folder-down" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-base text-slate-900 dark:text-white">Final Deliverables & Working Files</h4>
+                <p class="text-xs text-slate-600 dark:text-slate-400">High-resolution exports, Figma prototype, vector assets & documentation.</p>
+              </div>
+            </div>
+
+            <a id="portalDeliverablesBtn" href="#" target="_blank" class="py-3 px-5 rounded-xl font-bold text-xs bg-navy-600 hover:bg-navy-700 text-white shadow-md hover:shadow-lg transition flex items-center gap-2 flex-shrink-0 active:scale-95">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>[ ⬇️ Download Final Files (Google Drive) ]</span>
+            </a>
+          </div>
+
+          <!-- Component 3: Revision & Feedback Box -->
+          <div class="space-y-4 pt-2">
+            <h4 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="message-square-text" class="w-4 h-4 text-navy-600 dark:text-blue-400"></i>
+              Revision & Client Feedback Box
+            </h4>
+
+            <form id="portalRevisionForm" onsubmit="handleRevisionSubmit(event)" class="space-y-3">
+              <textarea id="portalRevisionText" required rows="3" placeholder="Provide specific feedback or list adjustments for the current milestone..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-accent-violet text-sm"></textarea>
+              <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2.5 rounded-xl font-bold text-xs bg-accent-violet hover:bg-indigo-700 text-white shadow-md transition flex items-center gap-1.5 active:scale-95">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>Submit Revision Request</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Revisions History Log -->
+            <div class="space-y-2 pt-2">
+              <h5 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Revision History Log</h5>
+              <div id="portalRevisionsLog" class="space-y-2 max-h-48 overflow-y-auto">
+                <!-- Dynamically populated by JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-10 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-800 dark:text-slate-200" id="footerName">Zunaid Ahmed</span>
+        <span>• Virtual Office & Agency Portal</span>
+      </div>
+      <div>
+        <span>Built with Master Virtual Office Blueprint v2.0 • 100% Responsive & Zero-Code Ready</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= ⚙️ ADMIN CUSTOMIZATION DRAWER (Slide-Over) ================= -->
+  <div id="adminDrawer" class="fixed inset-0 z-50 overflow-hidden hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeAdminDrawer()"></div>
+
+    <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div class="pointer-events-auto w-screen max-w-xl bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800">
+        
+        <!-- Drawer Header -->
+        <div class="p-6 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 rounded-lg bg-navy-600 text-white">
+              <i data-lucide="sliders" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-900 dark:text-white">Edit Office Profile (⚙️ Customize)</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Update your links, prices, and client portals live without code</p>
+            </div>
+          </div>
+          <button onclick="closeAdminDrawer()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Drawer Tab Navigation -->
+        <div class="flex border-b border-slate-200 dark:border-slate-700 px-6 overflow-x-auto text-xs font-semibold text-slate-600 dark:text-slate-400 gap-4 flex-shrink-0">
+          <button onclick="switchAdminTab('profile')" id="admTabProfile" class="py-3 border-b-2 border-navy-600 text-navy-600 dark:text-blue-400">Profile</button>
+          <button onclick="switchAdminTab('links')" id="admTabLinks" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Meetings & Links</button>
+          <button onclick="switchAdminTab('ai')" id="admTabAi" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">AI & Forms</button>
+          <button onclick="switchAdminTab('services')" id="admTabServices" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Packages</button>
+          <button onclick="switchAdminTab('payments')" id="admTabPayments" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Payments</button>
+          <button onclick="switchAdminTab('clients')" id="admTabClients" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">VIP Portals</button>
+          <button onclick="switchAdminTab('backup')" id="admTabBackup" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Backup</button>
+        </div>
+
+        <!-- Drawer Tab Content (Scrollable) -->
+        <div class="p-6 overflow-y-auto flex-grow space-y-6 text-sm">
+          
+          <!-- TAB 1: PROFILE & BRANDING -->
+          <div id="admSectionProfile" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Trainee Full Name</label>
+              <input type="text" id="cfgName" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Skill Title / Headline</label>
+              <input type="text" id="cfgTitle" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Avatar Image URL</label>
+              <input type="text" id="cfgAvatar" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Cover Banner Image URL</label>
+              <input type="text" id="cfgCover" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Short Bio</label>
+              <textarea id="cfgBio" rows="3" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Response Badge</label>
+                <input type="text" id="cfgResponseTime" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Rating Badge</label>
+                <input type="text" id="cfgRating" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: MEETINGS & LINKS -->
+          <div id="admSectionLinks" class="hidden space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Whereby Room URL (Live Cabin)</label>
+              <input type="text" id="cfgWherebyUrl" placeholder="https://whereby.com/your-room" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Cal.com or Calendly Booking Link</label>
+              <input type="text" id="cfgCalUrl" placeholder="https://cal.com/your-name/30min" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">WhatsApp Number (with Country Code)</label>
+              <input type="text" id="cfgWhatsappNumber" placeholder="8801700000000" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">WhatsApp Pre-filled Message</label>
+              <textarea id="cfgWhatsappPrefill" rows="2" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></textarea>
+            </div>
+          </div>
+
+          <!-- TAB 3: AI & FORMS -->
+          <div id="admSectionAi" class="hidden space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">AI Assistant Name</label>
+              <input type="text" id="cfgAiName" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Initial Greeting Message</label>
+              <textarea id="cfgAiWelcome" rows="2" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">AI System Instructions Prompt</label>
+              <textarea id="cfgAiSystemPrompt" rows="4" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Tally Form Embed URL</label>
+              <input type="text" id="cfgTallyUrl" placeholder="https://tally.so/embed/..." class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+          </div>
+
+          <!-- TAB 4: PACKAGES & PRICING -->
+          <div id="admSectionServices" class="hidden space-y-4">
+            <p class="text-xs text-slate-500">Edit pricing and package titles below:</p>
+            
+            <!-- Starter -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <span class="font-bold text-xs uppercase text-slate-700 dark:text-slate-300">Package 1 (Starter)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" id="cfgP1USD" placeholder="USD ($)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+                <input type="number" id="cfgP1BDT" placeholder="BDT (৳)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+              </div>
+              <input type="text" id="cfgP1Delivery" placeholder="Delivery time (e.g. 2-3 Days)" class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+            </div>
+
+            <!-- Standard -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <span class="font-bold text-xs uppercase text-slate-700 dark:text-slate-300">Package 2 (Standard / Pro)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" id="cfgP2USD" placeholder="USD ($)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+                <input type="number" id="cfgP2BDT" placeholder="BDT (৳)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+              </div>
+              <input type="text" id="cfgP2Delivery" placeholder="Delivery time (e.g. 5-7 Days)" class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+            </div>
+
+            <!-- Enterprise -->
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <span class="font-bold text-xs uppercase text-slate-700 dark:text-slate-300">Package 3 (Custom)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" id="cfgP3USD" placeholder="USD ($)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+                <input type="number" id="cfgP3BDT" placeholder="BDT (৳)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: PAYMENTS SETUP -->
+          <div id="admSectionPayments" class="hidden space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Payoneer / Wise Payment Link</label>
+              <input type="text" id="cfgPayoneerLink" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Official Payoneer Email</label>
+              <input type="text" id="cfgPayoneerEmail" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">bKash Personal/Merchant Number</label>
+              <input type="text" id="cfgBkashNumber" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Nagad Personal/Merchant Number</label>
+              <input type="text" id="cfgNagadNumber" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">bKash QR Code Image URL</label>
+              <input type="text" id="cfgQrCodeUrl" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+            </div>
+          </div>
+
+          <!-- TAB 6: VIP CLIENT PORTALS MANAGER -->
+          <div id="admSectionClients" class="hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Active Client Projects</h4>
+                <p class="text-xs text-slate-500">Generate private access tokens & share direct links</p>
+              </div>
+              <button onclick="openAddNewClientModal()" class="px-3 py-1.5 rounded-lg bg-navy-600 text-white text-xs font-bold flex items-center gap-1 shadow-xs">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Client
+              </button>
+            </div>
+
+            <!-- List of Client Portals -->
+            <div id="admClientsList" class="space-y-3">
+              <!-- Dynamically rendered by JS -->
+            </div>
+          </div>
+
+          <!-- TAB 7: BACKUP & DATA -->
+          <div id="admSectionBackup" class="hidden space-y-4">
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white">Export & Import Settings</h4>
+              <p class="text-xs text-slate-500">Save a backup of your virtual office settings or transfer them to another device.</p>
+              <div class="flex gap-2">
+                <button onclick="exportConfigJson()" class="flex-1 py-2 px-3 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs font-bold flex items-center justify-center gap-1">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Backup (.json)
+                </button>
+                <label class="flex-1 py-2 px-3 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer">
+                  <i data-lucide="upload" class="w-3.5 h-3.5"></i> Import Backup
+                  <input type="file" id="cfgImportInput" accept=".json" onchange="importConfigJson(event)" class="hidden">
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+              <button onclick="resetConfigToDefault()" class="w-full py-2.5 px-4 rounded-xl border border-rose-300 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                <span>Reset All to Default Settings</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Drawer Footer with Save Button -->
+        <div class="p-6 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <button onclick="closeAdminDrawer()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Cancel</button>
+          <button onclick="saveAdminChanges()" class="px-6 py-2.5 rounded-xl bg-navy-600 hover:bg-navy-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 active:scale-95">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Save & Apply Changes</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODALS CONTAINER ================= -->
+
+  <!-- WHEREBY LIVE ROOM MODAL -->
+  <div id="modalWhereby" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closeWherebyModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-4xl h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+        <div class="p-4 bg-slate-100 dark:bg-slate-800 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">📹 Trainee Virtual Cabin (Whereby Room)</h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <a id="wherebyDirectLink" href="#" target="_blank" class="text-xs text-navy-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+              <span>Open in New Tab</span>
+              <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+            <button onclick="closeWherebyModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex-grow bg-slate-950">
+          <iframe id="wherebyIframe" src="" allow="camera; microphone; fullscreen; speaker; display-capture" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAL.COM SCHEDULER MODAL -->
+  <div id="modalCal" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closeCalModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-3xl h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+        <div class="p-4 bg-slate-100 dark:bg-slate-800 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-navy-600 dark:text-blue-400"></i>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">📅 Schedule a Meeting (Cal.com)</h3>
+          </div>
+          <button onclick="closeCalModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="flex-grow">
+          <iframe id="calIframe" src="" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TALLY QUICK CONVERSATIONAL MODAL -->
+  <div id="modalTally" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closeTallyModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-2xl h-[80vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+        <div class="p-4 bg-slate-100 dark:bg-slate-800 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-2">
+            <i data-lucide="file-text" class="w-4 h-4 text-accent-violet"></i>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">⚡ Quick Conversational Inquiry Form</h3>
+          </div>
+          <button onclick="closeTallyModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="flex-grow">
+          <iframe id="modalTallyIframe" src="" class="w-full h-full border-0"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO CASE STUDY MODAL -->
+  <div id="modalPortfolio" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closePortfolioModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 max-h-[90vh]">
+        <div class="relative h-56 sm:h-64 overflow-hidden">
+          <img id="modalPortImg" src="" alt="Case Study Preview" class="w-full h-full object-cover">
+          <button onclick="closePortfolioModal()" class="absolute top-3 right-3 p-2 rounded-full bg-slate-900/60 text-white hover:bg-slate-900 transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="p-6 overflow-y-auto space-y-4">
+          <div class="flex items-center justify-between">
+            <span id="modalPortCategory" class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-blue-100 dark:bg-blue-950 text-navy-600 dark:text-blue-300">Category</span>
+            <span id="modalPortResults" class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Results</span>
+          </div>
+          <h3 id="modalPortTitle" class="text-xl font-bold text-slate-900 dark:text-white">Case Study Title</h3>
+          <p id="modalPortDesc" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Description</p>
+          <div>
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tools & Tech Stack Used</h4>
+            <div id="modalPortTools" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+            <button onclick="closePortfolioModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Close</button>
+            <a href="#order-desk" onclick="closePortfolioModal()" class="px-5 py-2 rounded-xl text-xs font-bold bg-navy-600 text-white shadow-sm hover:bg-navy-700">Request Similar Project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRXID PAYMENT RECEIPT MODAL -->
+  <div id="modalVoucher" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closeVoucherModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 text-center">
+        <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 mx-auto flex items-center justify-center">
+          <i data-lucide="check-check" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Official Payment Voucher</h3>
+        <p class="text-xs text-slate-500">Your local banking transaction details have been verified and logged.</p>
+        
+        <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl text-left text-xs space-y-2 border border-slate-200 dark:border-slate-700 font-mono">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Recipient:</span>
+            <span class="font-bold text-slate-800 dark:text-slate-200" id="voucherRecipient">Zunaid Ahmed</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">TrxID:</span>
+            <span class="font-bold text-emerald-600" id="voucherTrxId">9J4K2L8M7</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Timestamp:</span>
+            <span class="text-slate-700 dark:text-slate-300" id="voucherTime">Just now</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Status:</span>
+            <span class="font-bold text-emerald-600">CONFIRMED</span>
+          </div>
+        </div>
+
+        <button onclick="window.print()" class="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span>Print / Save Voucher</span>
+        </button>
+        <button onclick="closeVoucherModal()" class="w-full py-2 px-4 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+          Close Window
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT CLIENT MODAL IN ADMIN -->
+  <div id="modalAddClient" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closeAddClientModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+          <h3 class="font-bold text-base text-slate-900 dark:text-white">Create New VIP Client Portal</h3>
+          <button onclick="closeAddClientModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <form onsubmit="handleSaveNewClient(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Client Full Name *</label>
+            <input type="text" id="newClientName" required placeholder="e.g. Sarah Jenkins" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Company / Brand Name</label>
+            <input type="text" id="newClientCompany" placeholder="e.g. Jenkins Digital Australia" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Project Title *</label>
+            <input type="text" id="newClientProject" required placeholder="e.g. Mobile eCommerce Store UI" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Secret Token / Code *</label>
+              <input type="text" id="newClientToken" required placeholder="PRJ-303-SARAH" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono uppercase">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Initial Progress (%)</label>
+              <input type="number" id="newClientProgress" min="0" max="100" value="25" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Google Drive Deliverables URL</label>
+            <input type="text" id="newClientDrive" placeholder="https://drive.google.com/drive/folders/..." class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+          </div>
+          <div class="pt-2 flex justify-end gap-2">
+            <button type="button" onclick="closeAddClientModal()" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-navy-600 text-white font-bold">Create VIP Portal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAD DATA & APPLICATION SCRIPT -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
