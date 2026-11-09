@@ -109,6 +109,10 @@ function updateCurrencyButtons() {
 
 // ---------------- STATUS TOGGLE ----------------
 function toggleOfficeStatus() {
+  if (!isAdminLoggedIn()) {
+    showToast("🔒 Status is read-only for visitors. Please login as Owner to change.");
+    return;
+  }
   config.profile.status = (config.profile.status === 'online') ? 'deepwork' : 'online';
   saveConfigToStorage();
   updateStatusUI();
@@ -116,8 +120,31 @@ function toggleOfficeStatus() {
   showToast(msg);
 }
 
+function setAdminStatus(status) {
+  config.profile.status = status;
+  saveConfigToStorage();
+  updateStatusUI();
+  showToast(status === 'online' ? '🟢 Office Status set to Online' : '🔴 Office Status set to Deep Work');
+}
+
+function updateAdminDrawerStatusButtons() {
+  const isOnline = config.profile.status === 'online';
+  const btnOnline = document.getElementById('cfgStatusOnlineBtn');
+  const btnDeepwork = document.getElementById('cfgStatusDeepworkBtn');
+  if (btnOnline && btnDeepwork) {
+    if (isOnline) {
+      btnOnline.className = "py-2.5 px-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-center gap-1.5";
+      btnDeepwork.className = "py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 text-xs font-bold flex items-center justify-center gap-1.5";
+    } else {
+      btnDeepwork.className = "py-2.5 px-3 rounded-xl border-2 border-rose-500 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center justify-center gap-1.5";
+      btnOnline.className = "py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 text-xs font-bold flex items-center justify-center gap-1.5";
+    }
+  }
+}
+
 function updateStatusUI() {
   const isOnline = config.profile.status === 'online';
+  const isOwner = isAdminLoggedIn();
   
   // Navbar Status
   const navBadge = document.getElementById('navStatusBadge');
@@ -125,16 +152,28 @@ function updateStatusUI() {
   const navPing = document.getElementById('navStatusPing');
   const navText = document.getElementById('navStatusText');
   
-  if (isOnline) {
-    navBadge.className = "ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border shadow-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 hover:scale-105 active:scale-95 transition cursor-pointer";
-    navDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
-    navPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
-    navText.textContent = "Online";
-  } else {
-    navBadge.className = "ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border shadow-xs bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800 hover:scale-105 active:scale-95 transition cursor-pointer";
-    navDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
-    navPing.className = "hidden";
-    navText.textContent = "Deep Work";
+  if (navBadge) {
+    if (isOwner) {
+      navBadge.onclick = toggleOfficeStatus;
+      navBadge.style.cursor = 'pointer';
+      navBadge.title = "Owner Action: Click to toggle office status";
+    } else {
+      navBadge.onclick = null;
+      navBadge.style.cursor = 'default';
+      navBadge.title = "Current Live Office Status";
+    }
+
+    if (isOnline) {
+      navBadge.className = `ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border shadow-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 ${isOwner ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'}`;
+      navDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+      navPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+      navText.textContent = "Online";
+    } else {
+      navBadge.className = `ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border shadow-xs bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800 ${isOwner ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'}`;
+      navDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+      navPing.className = "hidden";
+      navText.textContent = "Deep Work";
+    }
   }
 
   // Hero Avatar Dot
@@ -148,18 +187,52 @@ function updateStatusUI() {
   const heroDotLarge = document.getElementById('heroStatusDotLarge');
   const heroPing = document.getElementById('heroStatusPing');
   const heroText = document.getElementById('heroStatusText');
+  const heroHint = document.getElementById('heroStatusOwnerHint');
 
   if (heroBanner && heroText) {
+    if (isOwner) {
+      heroBanner.onclick = toggleOfficeStatus;
+      heroBanner.style.cursor = 'pointer';
+      if (heroHint) {
+        heroHint.className = "text-[10px] text-amber-500 font-bold ml-1.5 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full";
+        heroHint.textContent = "(Owner: Click to toggle)";
+      }
+    } else {
+      heroBanner.onclick = null;
+      heroBanner.style.cursor = 'default';
+      if (heroHint) {
+        heroHint.className = "hidden";
+        heroHint.textContent = "";
+      }
+    }
+
     if (isOnline) {
-      heroBanner.className = "cursor-pointer inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold border shadow-xs transition hover:scale-[1.01] active:scale-95 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800";
+      heroBanner.className = `inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold border shadow-xs transition bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800 ${isOwner ? 'cursor-pointer hover:scale-[1.01] active:scale-95' : 'cursor-default'}`;
       heroDotLarge.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
       heroPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
       heroText.textContent = config.profile.statusOnlineText || "🟢 Office Status: Online (Available for Instant Meeting)";
     } else {
-      heroBanner.className = "cursor-pointer inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold border shadow-xs transition hover:scale-[1.01] active:scale-95 bg-rose-50/90 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-800";
+      heroBanner.className = `inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold border shadow-xs transition bg-rose-50/90 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-800 ${isOwner ? 'cursor-pointer hover:scale-[1.01] active:scale-95' : 'cursor-default'}`;
       heroDotLarge.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500";
       heroPing.className = "hidden";
       heroText.textContent = config.profile.statusDeepworkText || "🔴 In a Deep Work Session (Leave a message with my AI Receptionist)";
+    }
+  }
+
+  updateAdminDrawerStatusButtons();
+}
+
+function renderFormMode() {
+  const formBuiltin = document.getElementById('projectOrderForm');
+  const containerTally = document.getElementById('tallyEmbedContainer');
+  const isTally = config.tally && config.tally.useEmbeddedTally;
+  if (formBuiltin && containerTally) {
+    if (isTally) {
+      formBuiltin.classList.add('hidden');
+      containerTally.classList.remove('hidden');
+    } else {
+      formBuiltin.classList.remove('hidden');
+      containerTally.classList.add('hidden');
     }
   }
 }
@@ -207,6 +280,7 @@ function renderApp() {
   // Tally Embed URL
   document.getElementById('tallyIframe').src = config.tally.embedUrl;
   document.getElementById('modalTallyIframe').src = config.tally.embedUrl;
+  renderFormMode();
 
   initIcons();
 }
@@ -592,6 +666,7 @@ function updateAdminVisibility() {
   const floatBar = document.getElementById('adminFloatingBar');
   if (navBtn) navBtn.classList.toggle('hidden', !isLogged);
   if (floatBar) floatBar.classList.toggle('hidden', !isLogged);
+  updateStatusUI();
 }
 
 function openAdminLoginModal() {
@@ -905,6 +980,7 @@ function populateAdminFields() {
   document.getElementById('cfgAiWelcome').value = config.aiDesk.welcomeMessage || '';
   document.getElementById('cfgAiSystemPrompt').value = config.aiDesk.systemPrompt || '';
   document.getElementById('cfgTallyUrl').value = config.tally.embedUrl || '';
+  document.getElementById('cfgFormProvider').value = (config.tally && config.tally.useEmbeddedTally) ? 'tally' : 'builtin';
 
   // Packages
   document.getElementById('cfgP1USD').value = config.packages[0].priceUSD;
@@ -952,6 +1028,9 @@ function saveAdminChanges() {
   config.aiDesk.welcomeMessage = document.getElementById('cfgAiWelcome').value;
   config.aiDesk.systemPrompt = document.getElementById('cfgAiSystemPrompt').value;
   config.tally.embedUrl = document.getElementById('cfgTallyUrl').value;
+  if (!config.tally) config.tally = {};
+  config.tally.useEmbeddedTally = (document.getElementById('cfgFormProvider').value === 'tally');
+  renderFormMode();
 
   config.packages[0].priceUSD = Number(document.getElementById('cfgP1USD').value);
   config.packages[0].priceBDT = Number(document.getElementById('cfgP1BDT').value);
