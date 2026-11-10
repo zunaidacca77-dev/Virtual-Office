@@ -12,6 +12,16 @@ let currentLocalPayProvider = 'bkash';
 let currentAdSource = null;
 let isClientPreviewActive = false;
 
+// Voice Conversation State
+let isVoiceModeActive = false;
+let isSpeechOutputEnabled = true;
+let isRecordingSpeech = false;
+let isAlexSpeaking = false;
+let voiceLanguage = 'en-US'; // 'en-US' or 'bn-BD'
+let speechRecognizer = null;
+let currentUtterance = null;
+let voiceAutoLoop = true;
+
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
   loadConfig();
@@ -482,7 +492,7 @@ function handleAIChatSubmit(e) {
 
   // Append User message
   const userBubble = document.createElement('div');
-  userBubble.className = "flex items-start justify-end gap-2";
+  userBubble.className = "flex items-start justify-end gap-2 animate-fadeIn";
   userBubble.innerHTML = `
     <div class="bg-navy-600 text-white p-3 rounded-2xl rounded-tr-none shadow-2xs max-w-[85%]">
       <p>${escapeHtml(userText)}</p>
@@ -493,6 +503,7 @@ function handleAIChatSubmit(e) {
   history.scrollTop = history.scrollHeight;
 
   // Simulate AI Thinking and Intelligent Response
+  updateVoiceUIState('thinking');
   setTimeout(() => {
     const aiResponse = generateAIResponse(userText);
     const aiBubble = document.createElement('div');
@@ -505,7 +516,21 @@ function handleAIChatSubmit(e) {
     `;
     history.appendChild(aiBubble);
     history.scrollTop = history.scrollHeight;
-  }, 600);
+
+    // Log to Executive Chamber AI Inbox
+    logAiConversation(userText, aiResponse);
+
+    // Speak aloud if voice mode or speech output is active
+    if (isVoiceModeActive || isSpeechOutputEnabled) {
+      speakText(aiResponse, () => {
+        if (isVoiceModeActive && voiceAutoLoop) {
+          setTimeout(startMicListening, 700);
+        }
+      });
+    } else {
+      updateVoiceUIState('idle');
+    }
+  }, 500);
 }
 
 function generateAIResponse(query) {
@@ -514,17 +539,529 @@ function generateAIResponse(query) {
   const sym = isUSD ? '$' : '৳';
   const p1 = isUSD ? config.packages[0].priceUSD : config.packages[0].priceBDT;
   const p2 = isUSD ? config.packages[1].priceUSD : config.packages[1].priceBDT;
+  const p3 = isUSD ? config.packages[2].priceUSD : config.packages[2].priceBDT;
 
-  if (q.includes('price') || q.includes('cost') || q.includes('package') || q.includes('টাকা') || q.includes('দাম') || q.includes('খরচ')) {
-    return `We offer 3 streamlined packages: <strong>Starter</strong> (${sym}${p1}), <strong>Standard / Pro</strong> (${sym}${p2} - Most Popular), and <strong>Custom Enterprise</strong>. You can view all included deliverables in Section 3 below.`;
-  } else if (q.includes('meeting') || q.includes('call') || q.includes('video') || q.includes('live') || q.includes('কথা') || q.includes('মিটিং')) {
-    return `You can knock directly on the <strong>Live Virtual Cabin</strong> on the left side of this lounge. If I'm offline or in deep work, click <strong>Schedule a Meeting</strong> to pick a slot on Cal.com!`;
-  } else if (q.includes('whatsapp') || q.includes('contact') || q.includes('number') || q.includes('হোয়াটসঅ্যাপ') || q.includes('নাম্বার')) {
+  const isBengali = /[\u0980-\u09FF]/.test(query) || voiceLanguage === 'bn-BD';
+
+  // 1. Pricing / Packages / Cost
+  if (q.includes('price') || q.includes('cost') || q.includes('package') || q.includes('টাকা') || q.includes('দাম') || q.includes('খরচ') || q.includes('প্রাইস') || q.includes('ফি')) {
+    if (isBengali) {
+      return `আমাদের প্রধান প্যাকেজগুলো হলো: <strong>স্টার্টার</strong> (${sym}${p1}), <strong>স্ট্যান্ডার্ড / প্রো</strong> (${sym}${p2} - সবচেয়ে জনপ্রিয়), এবং <strong>কাস্টম এন্টারপ্রাইজ</strong> (${sym}${p3})। আপনি নিচের প্যাকেজ সেকশনে সমস্ত ফিচার বিস্তারিত দেখতে পারেন।`;
+    }
+    return `We offer 3 streamlined packages: <strong>Starter</strong> (${sym}${p1}), <strong>Standard / Pro</strong> (${sym}${p2} - Most Popular), and <strong>Custom Enterprise</strong> (${sym}${p3}). You can view all included deliverables in Section 3 below.`;
+  }
+  
+  // 2. Meeting / Live Cabin / Video Call
+  else if (q.includes('meeting') || q.includes('call') || q.includes('video') || q.includes('live') || q.includes('কথা') || q.includes('মিটিং') || q.includes('দেখা') || q.includes('কেবিন') || q.includes('ভিডিও')) {
+    if (isBengali) {
+      return `আপনি এই লাউঞ্জের বাম পাশের <strong>লাইভ ভার্চুয়াল কেবিনে</strong> সরাসরি নক দিতে পারেন। জুনায়েদ ভাই অনলাইনে থাকলে সাথে সাথেই কথা বলতে পারবেন, অথবা ক্যালেন্ডার থেকে <strong>Schedule a Meeting</strong> বুক করতে পারেন।`;
+    }
+    return `You can knock directly on the <strong>Live Virtual Cabin</strong> on the left side of this lounge. If I'm offline or in deep work, click <strong>Schedule a Meeting</strong> to pick an open slot on Cal.com!`;
+  }
+  
+  // 3. WhatsApp / Phone / Contact
+  else if (q.includes('whatsapp') || q.includes('contact') || q.includes('number') || q.includes('phone') || q.includes('হোয়াটসঅ্যাপ') || q.includes('নাম্বার') || q.includes('ফোন') || q.includes('যোগাযোগ')) {
+    if (isBengali) {
+      return `আপনি যেকোনো সময় জুনায়েদ হাসানের হোয়াটসঅ্যাপে সরাসরি নক দিতে পারেন। নিচে থাকা <strong>[ 💬 Direct WhatsApp ]</strong> বাটনে ক্লিক করুন অথবা <code>+${config.meeting.whatsappNumber}</code> নাম্বারে মেসেজ পাঠান।`;
+    }
     return `You can chat directly with me on WhatsApp anytime by clicking the <strong>[ 💬 Direct WhatsApp ]</strong> button below or messaging <code>+${config.meeting.whatsappNumber}</code>.`;
-  } else if (q.includes('brief') || q.includes('order') || q.includes('hire') || q.includes('project') || q.includes('কাজ') || q.includes('অর্ডার')) {
-    return `Awesome! You can scroll to Section 4 (<strong>Start a Project Desk</strong>) to submit your requirements. Once submitted, your workspace ticket is generated immediately.`;
-  } else {
+  }
+  
+  // 4. Portfolio / Past Work / Experience
+  else if (q.includes('portfolio') || q.includes('sample') || q.includes('work') || q.includes('experience') || q.includes('পোর্টফোলিও') || q.includes('কাজ') || q.includes('স্যাম্পল') || q.includes('অভিজ্ঞতা')) {
+    if (isBengali) {
+      return `আমাদের সাম্প্রতিক কাজের কেস স্টাডি ও লাইভ ডেমো দেখতে নিচের <strong>Portfolio Section</strong> ভিজিট করুন। FinFlow, LuxeAura সহ একাধিক সফল প্রজেক্টের লাইভ রেজাল্ট সেখানে প্রদর্শিত আছে।`;
+    }
+    return `You can explore our verified client case studies and live interactive UI demos right below in the <strong>Portfolio Section</strong>, including FinFlow Mobile UI, LuxeAura, and NovaCRM.`;
+  }
+
+  // 5. Brief / Project Order / Hire
+  else if (q.includes('brief') || q.includes('order') || q.includes('hire') || q.includes('project') || q.includes('start') || q.includes('অর্ডার') || q.includes('রিকোয়ারমেন্ট') || q.includes('প্রজেক্ট') || q.includes('শুরু')) {
+    if (isBengali) {
+      return `দারুণ! আপনার নতুন কাজের ব্রিফ ও ফাইল জমা দিতে ৪ নং সেকশনের <strong>Start a Project Desk</strong> ফর্মটি পূরণ করুন। রিকোয়ারমেন্ট জমা দেওয়া মাত্রই আপনার জন্য ভিআইপি ওয়ার্কস্পেস টিকেট তৈরি হবে।`;
+    }
+    return `Awesome! You can scroll to Section 4 (<strong>Start a Project Desk</strong>) to submit your requirements and attach reference files. Once submitted, your workspace ticket is generated immediately.`;
+  }
+
+  // 6. Greetings / Salutations
+  else if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('সালাম') || q.includes('আসসালামু আলাইকুম') || q.includes('কেমন') || q.includes('শুভ')) {
+    if (isBengali) {
+      return `আসসালামু আলাইকুম! জুনায়েদ হাসানের ভার্চুয়াল অফিসে স্বাগতম। আমি অ্যালেক্স, আপনার এআই রিসেপশনিস্ট। প্যাকেজের দাম, লাইভ ভিডিও মিটিং বা নতুন প্রজেক্ট অর্ডার নিয়ে আপনি আমার সাথে কথা বলতে পারেন। কীভাবে সাহায্য করতে পারি?`;
+    }
+    return `Hello! Welcome to Zunaid Hasan's Virtual Office. I'm Alex, your 24/7 AI Receptionist. You can ask me about our packages, portfolio, book a meeting in the Live Cabin, or leave a project brief. How can I assist you today?`;
+  }
+
+  // Default Fallback
+  else {
+    if (isBengali) {
+      return `আপনার বার্তার জন্য ধন্যবাদ! জুনায়েদ হাসান এই ডেস্কে সার্বক্ষণিক নজর রাখছেন। আপনি চাইলে বাম পাশের লাইভ কেবিনে সরাসরি মিটিংয়ে আসতে পারেন, অথবা সরাসরি হোয়াটসঅ্যাপে মেসেজ দিতে পারেন।`;
+    }
     return `Thank you for your message! ${config.profile.name} is currently monitoring this desk. Would you like to enter our Live Cabin for a face-to-face chat, or would you prefer to connect via WhatsApp?`;
+  }
+}
+
+// ---------------- 🎙️ 24/7 AI VOICE CONVERSATION ENGINE ----------------
+
+function toggleVoiceConversationMode(forceState) {
+  const overlay = document.getElementById('aiVoiceCallOverlay');
+  const btnText = document.getElementById('btnVoiceModeText');
+  const btnToggle = document.getElementById('btnToggleVoiceMode');
+
+  if (forceState !== undefined) {
+    isVoiceModeActive = !!forceState;
+  } else {
+    isVoiceModeActive = !isVoiceModeActive;
+  }
+
+  // Check Web Speech API support
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition && isVoiceModeActive) {
+    showToast("⚠️ Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+    isVoiceModeActive = false;
+  }
+
+  if (isVoiceModeActive) {
+    if (overlay) overlay.classList.remove('hidden');
+    if (btnToggle) {
+      btnToggle.className = "px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-xs bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 animate-pulse";
+    }
+    if (btnText) btnText.textContent = "Voice Call Active";
+    showToast("🎙️ Voice Call Mode activated. Alex is listening!");
+    updateVoiceUIState('listening');
+
+    // Smooth scroll to voice HUD
+    overlay.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Greet user vocally if first time
+    const greeting = voiceLanguage === 'bn-BD'
+      ? "হ্যালো! আমি অ্যালেক্স, জুনায়েদ হাসানের ভার্চুয়াল রিসেপশনিস্ট। কীভাবে আপনাকে সাহায্য করতে পারি?"
+      : "Hello! I am Alex, Zunaid Hasan's 24/7 AI Receptionist. Speak naturally, I am listening.";
+    
+    // Announce verbally if audio enabled, then begin listening
+    speakText(greeting, () => {
+      startMicListening();
+    });
+  } else {
+    if (overlay) overlay.classList.add('hidden');
+    if (btnToggle) {
+      btnToggle.className = "px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-xs bg-indigo-50 dark:bg-indigo-950/80 text-accent-violet border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95";
+    }
+    if (btnText) btnText.textContent = "Voice Call Mode";
+    stopMicListening();
+    stopVoiceAssistantSpeech();
+    updateVoiceUIState('idle');
+    showToast("Voice Call ended.");
+  }
+}
+
+function setVoiceLanguage(lang) {
+  voiceLanguage = lang;
+  const btnEN = document.getElementById('voiceLangEN');
+  const btnBN = document.getElementById('voiceLangBN');
+
+  if (lang === 'bn-BD') {
+    if (btnBN) btnBN.className = "px-2 py-0.5 rounded bg-indigo-600 text-white shadow-xs transition";
+    if (btnEN) btnEN.className = "px-2 py-0.5 rounded text-slate-400 hover:text-white transition";
+    showToast("ভয়েস ভাষা পরিবর্তন: বাংলা (বাংলাদেশ)");
+  } else {
+    if (btnEN) btnEN.className = "px-2 py-0.5 rounded bg-indigo-600 text-white shadow-xs transition";
+    if (btnBN) btnBN.className = "px-2 py-0.5 rounded text-slate-400 hover:text-white transition";
+    showToast("Voice language set to English (US)");
+  }
+
+  // If mic is currently running, restart with new language
+  if (isRecordingSpeech) {
+    stopMicListening();
+    setTimeout(startMicListening, 200);
+  }
+}
+
+function toggleSpeechOutput() {
+  isSpeechOutputEnabled = !isSpeechOutputEnabled;
+  const icon = document.getElementById('iconSpeechOutput');
+  if (icon) {
+    icon.setAttribute('data-lucide', isSpeechOutputEnabled ? 'volume-2' : 'volume-x');
+    initIcons();
+  }
+  if (!isSpeechOutputEnabled && isAlexSpeaking) {
+    stopVoiceAssistantSpeech();
+  }
+  showToast(isSpeechOutputEnabled ? "🔊 AI verbal speech output enabled" : "🔇 AI speech output muted");
+}
+
+function initSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isRecordingSpeech = true;
+    updateVoiceUIState('listening');
+  };
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    let finalTranscript = '';
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+
+    const feedback = document.getElementById('voiceLiveFeedback');
+    if (feedback) {
+      feedback.textContent = `"${finalTranscript || interim}"`;
+    }
+
+    if (finalTranscript) {
+      processSpokenInput(finalTranscript.trim());
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.warn("Speech recognition error:", event.error);
+    isRecordingSpeech = false;
+    const feedback = document.getElementById('voiceLiveFeedback');
+    
+    if (event.error === 'no-speech') {
+      if (feedback) feedback.textContent = voiceLanguage === 'bn-BD' ? "কোনো কথা শোনা যায়নি। আবার বলুন..." : "Didn't catch that. Please speak again...";
+      if (isVoiceModeActive && !isAlexSpeaking) {
+        setTimeout(startMicListening, 1200);
+      }
+    } else if (event.error === 'not-allowed') {
+      if (feedback) feedback.textContent = "⚠️ Microphone permission denied.";
+      showToast("Please allow microphone access to talk with Alex.");
+      updateVoiceUIState('idle');
+    } else {
+      updateVoiceUIState('idle');
+    }
+  };
+
+  recognition.onend = () => {
+    isRecordingSpeech = false;
+    if (!isAlexSpeaking && isVoiceModeActive) {
+      updateVoiceUIState('idle');
+    }
+  };
+
+  return recognition;
+}
+
+function startMicListening() {
+  if (isAlexSpeaking) {
+    stopVoiceAssistantSpeech();
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast("⚠️ Voice recognition not supported in this browser.");
+    return;
+  }
+
+  try {
+    if (!speechRecognizer) {
+      speechRecognizer = initSpeechRecognition();
+    }
+    if (speechRecognizer) {
+      speechRecognizer.lang = voiceLanguage;
+      speechRecognizer.start();
+    }
+  } catch (err) {
+    console.warn("Recognition start info:", err);
+  }
+}
+
+function stopMicListening() {
+  if (speechRecognizer) {
+    try {
+      speechRecognizer.stop();
+    } catch (e) {}
+  }
+  isRecordingSpeech = false;
+}
+
+function toggleMicRecording() {
+  if (isRecordingSpeech) {
+    stopMicListening();
+    updateVoiceUIState('idle');
+    showToast("Mic paused");
+  } else {
+    startMicListening();
+  }
+}
+
+function triggerQuickMicInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast("⚠️ Speech recognition is not supported in this browser.");
+    return;
+  }
+
+  const quickBtn = document.getElementById('btnQuickMic');
+  const chatInput = document.getElementById('aiChatInput');
+
+  if (isRecordingSpeech) {
+    stopMicListening();
+    if (quickBtn) quickBtn.classList.remove('ring-2', 'ring-rose-500', 'animate-pulse');
+    return;
+  }
+
+  if (quickBtn) quickBtn.classList.add('ring-2', 'ring-rose-500', 'animate-pulse');
+  showToast("🎙️ Listening... Speak your question now!");
+
+  const quickRec = new SpeechRecognition();
+  quickRec.continuous = false;
+  quickRec.interimResults = true;
+  quickRec.lang = voiceLanguage;
+
+  quickRec.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      transcript += event.results[i][0].transcript;
+    }
+    if (chatInput) chatInput.value = transcript;
+
+    if (event.results[0].isFinal) {
+      quickRec.stop();
+      if (quickBtn) quickBtn.classList.remove('ring-2', 'ring-rose-500', 'animate-pulse');
+      handleAIChatSubmit(new Event('submit'));
+    }
+  };
+
+  quickRec.onerror = () => {
+    if (quickBtn) quickBtn.classList.remove('ring-2', 'ring-rose-500', 'animate-pulse');
+  };
+
+  quickRec.onend = () => {
+    if (quickBtn) quickBtn.classList.remove('ring-2', 'ring-rose-500', 'animate-pulse');
+  };
+
+  quickRec.start();
+}
+
+function updateVoiceUIState(state) {
+  const statusDot = document.getElementById('voiceStatusDot');
+  const statusPing = document.getElementById('voiceStatusPing');
+  const statusText = document.getElementById('voiceCallStatusText');
+  const orb = document.getElementById('voiceOrb');
+  const waveform = document.getElementById('waveformContainer');
+  const micBtnText = document.getElementById('textVoiceMic');
+  const micBtnIcon = document.getElementById('iconVoiceMic');
+  const feedback = document.getElementById('voiceLiveFeedback');
+
+  if (state === 'listening') {
+    if (statusDot) statusDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+    if (statusPing) statusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+    if (statusText) {
+      statusText.textContent = voiceLanguage === 'bn-BD' ? "অ্যালেক্স শুনছে (কথা বলুন)..." : "Listening... (Alex is waiting)";
+      statusText.className = "text-xs font-bold text-emerald-400 tracking-wide uppercase";
+    }
+    if (orb) orb.className = "relative w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-emerald-500/40 voice-orb-active";
+    if (waveform) waveform.classList.remove('opacity-20');
+    if (micBtnText) micBtnText.textContent = "Listening...";
+    if (micBtnIcon) micBtnIcon.setAttribute('data-lucide', 'mic');
+    if (feedback && !feedback.textContent.startsWith('"')) {
+      feedback.textContent = voiceLanguage === 'bn-BD' ? "কথা বলুন, অ্যালেক্স শুনছে..." : "Speak now, Alex is listening...";
+    }
+  } else if (state === 'speaking') {
+    if (statusDot) statusDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-400";
+    if (statusPing) statusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-300 opacity-75";
+    if (statusText) {
+      statusText.textContent = voiceLanguage === 'bn-BD' ? "অ্যালেক্স উত্তর দিচ্ছে..." : "Alex is Speaking...";
+      statusText.className = "text-xs font-bold text-indigo-300 tracking-wide uppercase";
+    }
+    if (orb) orb.className = "relative w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50 voice-orb-active";
+    if (waveform) waveform.classList.remove('opacity-20');
+    if (micBtnText) micBtnText.textContent = "Alex Speaking";
+  } else if (state === 'thinking') {
+    if (statusDot) statusDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400";
+    if (statusPing) statusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75";
+    if (statusText) {
+      statusText.textContent = "Alex is thinking...";
+      statusText.className = "text-xs font-bold text-amber-300 tracking-wide uppercase";
+    }
+    if (orb) orb.className = "relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-amber-500/40";
+    if (waveform) waveform.classList.add('opacity-20');
+    if (feedback) feedback.textContent = "Processing response...";
+  } else {
+    // idle
+    if (statusDot) statusDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-400";
+    if (statusPing) statusPing.className = "hidden";
+    if (statusText) {
+      statusText.textContent = "Tap Speak to Talk";
+      statusText.className = "text-xs font-bold text-slate-400 tracking-wide uppercase";
+    }
+    if (orb) orb.className = "relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-700 via-slate-800 to-indigo-900 flex items-center justify-center shadow-md";
+    if (waveform) waveform.classList.add('opacity-20');
+    if (micBtnText) micBtnText.textContent = "Tap to Speak";
+    if (micBtnIcon) micBtnIcon.setAttribute('data-lucide', 'mic');
+  }
+  initIcons();
+}
+
+function processSpokenInput(spokenText) {
+  if (!spokenText) return;
+
+  const chatInput = document.getElementById('aiChatInput');
+  if (chatInput) chatInput.value = spokenText;
+
+  // Append user bubble to chat history
+  const history = document.getElementById('aiChatHistory');
+  if (history) {
+    const userBubble = document.createElement('div');
+    userBubble.className = "flex items-start justify-end gap-2 animate-fadeIn";
+    userBubble.innerHTML = `
+      <div class="bg-navy-600 text-white p-3 rounded-2xl rounded-tr-none shadow-2xs max-w-[85%]">
+        <div class="flex items-center gap-1.5 mb-1 text-[10px] text-indigo-200">
+          <i data-lucide="mic" class="w-3 h-3"></i> Spoken Voice
+        </div>
+        <p>${escapeHtml(spokenText)}</p>
+      </div>
+    `;
+    history.appendChild(userBubble);
+    history.scrollTop = history.scrollHeight;
+    initIcons();
+  }
+
+  if (chatInput) chatInput.value = '';
+
+  updateVoiceUIState('thinking');
+
+  setTimeout(() => {
+    const aiResponse = generateAIResponse(spokenText);
+
+    // Append AI bubble
+    if (history) {
+      const aiBubble = document.createElement('div');
+      aiBubble.className = "flex items-start gap-2.5 animate-fadeIn";
+      aiBubble.innerHTML = `
+        <div class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-accent-violet flex items-center justify-center flex-shrink-0 text-xs font-bold">AI</div>
+        <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-700 shadow-2xs max-w-[85%]">
+          <p class="text-slate-800 dark:text-slate-200">${aiResponse}</p>
+        </div>
+      `;
+      history.appendChild(aiBubble);
+      history.scrollTop = history.scrollHeight;
+    }
+
+    // Save to Executive Chamber AI Inbox
+    logAiConversation(spokenText, aiResponse);
+
+    // Speak AI response aloud!
+    speakText(aiResponse, () => {
+      // When speech ends and voice mode is active, loop back to listening
+      if (isVoiceModeActive && voiceAutoLoop) {
+        setTimeout(startMicListening, 700);
+      }
+    });
+  }, 500);
+}
+
+function speakText(htmlOrText, onEndCallback) {
+  if (!isSpeechOutputEnabled || !('speechSynthesis' in window)) {
+    if (onEndCallback) onEndCallback();
+    return;
+  }
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  // Strip HTML tags for clean audio narration
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlOrText;
+  let cleanText = tempDiv.textContent || tempDiv.innerText || '';
+
+  // Clean formatting for natural speech
+  cleanText = cleanText
+    .replace(/\$([0-9,]+)/g, '$1 US dollars')
+    .replace(/৳([0-9,]+)/g, '$1 taka')
+    .replace(/\+/g, ' plus ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanText) {
+    if (onEndCallback) onEndCallback();
+    return;
+  }
+
+  const isBengali = /[\u0980-\u09FF]/.test(cleanText);
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = isBengali ? 'bn-BD' : (voiceLanguage === 'bn-BD' ? 'bn-BD' : 'en-US');
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+
+  // Try to pick natural voice
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    if (isBengali) {
+      const bnVoice = voices.find(v => v.lang.startsWith('bn'));
+      if (bnVoice) utterance.voice = bnVoice;
+    } else {
+      const enVoice = voices.find(v => (v.lang === 'en-US' || v.lang.startsWith('en')) && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Zira')));
+      if (enVoice) utterance.voice = enVoice;
+    }
+  }
+
+  utterance.onstart = () => {
+    isAlexSpeaking = true;
+    updateVoiceUIState('speaking');
+    const feedback = document.getElementById('voiceLiveFeedback');
+    if (feedback) feedback.textContent = `Alex: "${cleanText.slice(0, 90)}..."`;
+  };
+
+  utterance.onend = () => {
+    isAlexSpeaking = false;
+    updateVoiceUIState('idle');
+    if (onEndCallback) onEndCallback();
+  };
+
+  utterance.onerror = (e) => {
+    console.warn("Speech synthesis error", e);
+    isAlexSpeaking = false;
+    updateVoiceUIState('idle');
+    if (onEndCallback) onEndCallback();
+  };
+
+  currentUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopVoiceAssistantSpeech() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  isAlexSpeaking = false;
+  updateVoiceUIState('idle');
+}
+
+function logAiConversation(userQuery, aiReply) {
+  try {
+    const logs = getAiChatLogs();
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = aiReply;
+    const cleanReply = tempDiv.textContent || tempDiv.innerText || aiReply;
+
+    const newLog = {
+      id: 'CHAT-' + Math.floor(100 + Math.random() * 900),
+      visitorName: 'Live Voice / Chat Visitor',
+      contact: 'Voice Visitor',
+      time: 'Just now',
+      intent: userQuery.toLowerCase().includes('price') || userQuery.toLowerCase().includes('টাকা') ? 'Pricing & Packages' : 'Voice Inquiry',
+      userQuery: userQuery,
+      aiReply: cleanReply
+    };
+    logs.unshift(newLog);
+    if (logs.length > 10) logs.pop();
+    saveAiChatLogs(logs);
+  } catch (e) {
+    console.warn("Log AI conversation error:", e);
   }
 }
 

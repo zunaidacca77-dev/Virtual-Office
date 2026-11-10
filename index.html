@@ -90,6 +90,26 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
     }
+    /* Voice Mode Animations */
+    @keyframes wavePulse {
+      0%, 100% { height: 6px; opacity: 0.5; }
+      50% { height: 26px; opacity: 1; }
+    }
+    .wave-bar {
+      animation: wavePulse 1.2s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+    
+    @keyframes voiceOrbPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+      50% { transform: scale(1.08); box-shadow: 0 0 35px rgba(99, 102, 241, 0.8); }
+    }
+    .voice-orb-active {
+      animation: voiceOrbPulse 2s ease-in-out infinite;
+    }
   </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-navy-600 selection:text-white transition-colors duration-200 min-h-screen flex flex-col">
@@ -456,34 +476,108 @@
 
           </div>
 
-          <!-- RIGHT COLUMN: 24/7 AI Receptionist + Direct Connect [UPDATED] -->
-          <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md border-t-4 border-t-accent-violet">
+          <!-- RIGHT COLUMN: 24/7 AI Receptionist + Direct Connect with Real-Time Voice Mode -->
+          <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md border-t-4 border-t-accent-violet relative overflow-hidden">
             <div>
-              <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 flex items-center justify-center text-accent-violet shadow-xs">
                     <i data-lucide="bot" class="w-5 h-5"></i>
                   </div>
                   <div>
-                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white" id="aiDeskTitle">🤖 Talk to My AI Assistant</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">24/7 Automated Pricing, Briefs & Support</p>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white flex items-center gap-1.5" id="aiDeskTitle">
+                      <span>🤖 Alex (AI Receptionist)</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">24/7 Verbal Voice Call & Chat Assistant</p>
                   </div>
                 </div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300">
-                  ⚡ 24/7 Active
-                </span>
+
+                <!-- Voice Mode Toggle & Speech Audio Mute Toggle -->
+                <div class="flex items-center gap-2">
+                  <button id="btnToggleVoiceMode" onclick="toggleVoiceConversationMode()" class="px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-xs bg-indigo-50 dark:bg-indigo-950/80 text-accent-violet border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 active:scale-95" title="Switch to live verbal conversation">
+                    <i data-lucide="mic" class="w-3.5 h-3.5 text-accent-violet"></i>
+                    <span id="btnVoiceModeText">Voice Call Mode</span>
+                  </button>
+                  <button id="btnToggleSpeechOutput" onclick="toggleSpeechOutput()" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition" title="Toggle AI Voice Audio">
+                    <i id="iconSpeechOutput" data-lucide="volume-2" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- LIVE VOICE CALL ACTIVE OVERLAY / HUD (Active when Voice Mode is toggled ON) -->
+              <div id="aiVoiceCallOverlay" class="hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white rounded-2xl p-5 mb-4 border border-indigo-500/40 shadow-xl relative overflow-hidden transition-all duration-300">
+                <!-- Glowing ambient accent -->
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl"></div>
+
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span id="voiceStatusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span id="voiceStatusDot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span id="voiceCallStatusText" class="text-xs font-bold text-emerald-400 tracking-wide uppercase">Live Voice Mode Active</span>
+                  </div>
+
+                  <!-- Voice Language Toggle (English / Bengali) -->
+                  <div class="flex items-center bg-black/40 p-0.5 rounded-lg border border-white/10 text-[11px] font-bold">
+                    <button id="voiceLangEN" onclick="setVoiceLanguage('en-US')" class="px-2 py-0.5 rounded bg-indigo-600 text-white shadow-xs transition">EN</button>
+                    <button id="voiceLangBN" onclick="setVoiceLanguage('bn-BD')" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition">বাংলা</button>
+                  </div>
+                </div>
+
+                <!-- Central Pulsing Audio Orb & Animated Waveform -->
+                <div class="py-3 flex flex-col items-center justify-center space-y-3">
+                  <div id="voiceOrb" class="relative w-16 h-16 rounded-full bg-gradient-to-tr from-accent-violet via-indigo-500 to-blue-400 flex items-center justify-center shadow-lg shadow-indigo-500/30 transition-transform duration-300">
+                    <i id="voiceOrbIcon" data-lucide="mic" class="w-7 h-7 text-white"></i>
+                  </div>
+
+                  <!-- Audio Waveform Bars -->
+                  <div id="waveformContainer" class="flex items-center justify-center gap-1.5 h-6">
+                    <span class="w-1 bg-indigo-400 rounded-full wave-bar"></span>
+                    <span class="w-1 bg-indigo-400 rounded-full wave-bar"></span>
+                    <span class="w-1 bg-indigo-400 rounded-full wave-bar"></span>
+                    <span class="w-1 bg-indigo-400 rounded-full wave-bar"></span>
+                    <span class="w-1 bg-indigo-400 rounded-full wave-bar"></span>
+                  </div>
+
+                  <p id="voiceLiveFeedback" class="text-xs text-center text-slate-300 font-medium max-w-xs px-2 min-h-[30px] flex items-center justify-center">
+                    Speak naturally. Alex is listening and will reply verbally...
+                  </p>
+                </div>
+
+                <!-- Controls Bar in Voice Mode -->
+                <div class="flex items-center justify-center gap-2 pt-2 border-t border-white/10">
+                  <button id="btnVoiceMicMute" onclick="toggleMicRecording()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95">
+                    <i id="iconVoiceMic" data-lucide="mic" class="w-3.5 h-3.5"></i>
+                    <span id="textVoiceMic">Tap to Speak</span>
+                  </button>
+                  <button onclick="stopVoiceAssistantSpeech()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 text-xs font-bold transition flex items-center gap-1.5 active:scale-95" title="Interrupt Alex">
+                    <i data-lucide="square" class="w-3.5 h-3.5"></i>
+                    <span>Interrupt</span>
+                  </button>
+                  <button onclick="toggleVoiceConversationMode(false)" class="px-3 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/30 text-xs font-bold transition flex items-center gap-1.5 active:scale-95">
+                    <i data-lucide="phone-off" class="w-3.5 h-3.5"></i>
+                    <span>End Voice</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Interactive AI Chat Window -->
-              <div class="bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-60 mb-4 shadow-inner">
+              <div id="aiChatWindow" class="bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-60 mb-4 shadow-inner">
                 <!-- Chat Message History -->
                 <div id="aiChatHistory" class="flex-grow p-3 space-y-2.5 overflow-y-auto text-xs sm:text-sm">
                   <!-- Initial Greeting Rendered by JS -->
                 </div>
-                <!-- Chat Input Box -->
-                <form id="aiChatForm" onsubmit="handleAIChatSubmit(event)" class="p-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex gap-2">
-                  <input type="text" id="aiChatInput" placeholder="Ask about packages, prices or message me..." class="flex-grow px-3 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-navy-600 border border-slate-200 dark:border-slate-700">
-                  <button type="submit" class="px-3 py-1.5 bg-navy-600 hover:bg-navy-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+                <!-- Chat Input Box with Integrated Quick Mic Button -->
+                <form id="aiChatForm" onsubmit="handleAIChatSubmit(event)" class="p-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex gap-2 items-center">
+                  <input type="text" id="aiChatInput" placeholder="Ask about packages, prices or speak verbally..." class="flex-grow px-3 py-1.5 text-xs sm:text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-navy-600 border border-slate-200 dark:border-slate-700">
+                  
+                  <!-- Quick Push-to-Talk Mic in input bar -->
+                  <button type="button" id="btnQuickMic" onclick="triggerQuickMicInput()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Click to speak your message">
+                    <i id="quickMicIcon" data-lucide="mic" class="w-4 h-4 text-accent-violet"></i>
+                  </button>
+
+                  <button type="submit" class="px-3 py-1.5 bg-navy-600 hover:bg-navy-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-xs active:scale-95">
                     <span>Send</span>
                     <i data-lucide="send" class="w-3.5 h-3.5"></i>
                   </button>
