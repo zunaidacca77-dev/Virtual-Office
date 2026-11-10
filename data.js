@@ -25,10 +25,10 @@ const DEFAULT_CONFIG = {
   aiDesk: {
     assistantName: "Alex (AI Receptionist)",
     welcomeMessage: "Welcome to my Virtual Office! I am Alex, your 24/7 AI Receptionist. How can I assist you today? Feel free to ask about our service packages, pricing, or book an instant meeting.",
-    systemPrompt: `You are the official AI Receptionist for the trainee's Virtual Office. Greet clients politely.
+    systemPrompt: `You are the official AI Receptionist for Zunaid Hasan's Virtual Office. Greet clients politely.
 1. Our packages: Starter ($50/৳5,000), Standard ($150/৳15,000), and Custom Enterprise.
 2. If the client asks to talk live, invite them to click 'Knock & Enter Live Room' on the left.
-3. If trainee is offline, collect their Name, WhatsApp/Email, and Project Brief.
+3. If Zunaid is offline, collect their Name, WhatsApp/Email, and Project Brief.
 4. Reply concisely in English or Bengali depending on the user's language.`,
     embedCode: "" // Optional Chatbase / Tawk iframe or script
   },
@@ -154,7 +154,7 @@ const DEFAULT_CONFIG = {
     }
   ],
   payments: {
-    payoneerEmail: "payments@traineestudio.com",
+    payoneerEmail: "payments@zunaidhasan.com",
     payoneerLink: "https://login.payoneer.com/",
     wiseLink: "https://wise.com/pay/me/traineedemo",
     stripeCardLink: "https://buy.stripe.com/demo-payment-link",
@@ -185,7 +185,7 @@ const DEFAULT_CONFIG = {
         {
           date: "Nov 02, 2026",
           note: "Updated dark mode palette on the analytics dashboard as requested.",
-          author: "Zunaid (Trainee)"
+          author: "Zunaid Hasan (Studio Owner)"
         },
         {
           date: "Nov 05, 2026",
@@ -214,7 +214,7 @@ const DEFAULT_CONFIG = {
         {
           date: "Nov 06, 2026",
           note: "Initial theme demo delivered for review.",
-          author: "Zunaid (Trainee)"
+          author: "Zunaid Hasan (Studio Owner)"
         }
       ]
     }

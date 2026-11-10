@@ -1184,7 +1184,7 @@ function copyLocalPayNumber() {
 }
 
 function copyPayoneerEmail() {
-  const email = config.payments.payoneerEmail || "payments@traineestudio.com";
+  const email = config.payments.payoneerEmail || "payments@zunaidhasan.com";
   navigator.clipboard.writeText(email);
   showToast(`Copied Payoneer Email: ${email}`);
 }
@@ -2196,7 +2196,7 @@ function handleRevisionSubmit(e) {
   saveConfigToStorage();
   input.value = '';
   renderPortalRevisionsLog();
-  showToast('Feedback submitted to trainee workspace!');
+  showToast('Feedback submitted to studio workspace!');
 }
 
 function exitClientPortal() {
