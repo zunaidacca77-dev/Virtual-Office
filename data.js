@@ -6,7 +6,7 @@ const DEFAULT_CONFIG = {
   profile: {
     name: "Zunaid Hasan",
     title: "Cloud Accounting Specialist",
-    avatar: "profile.png?v=4",
+    avatar: "profile.png?v=7",
     cover: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&h=600&q=80",
     bio: "Certified Cloud Accounting & Bookkeeping Specialist helping US, UK, Canadian & Global businesses streamline financial operations, QuickBooks Online & Xero reconciliations, catch-up cleanups, payroll, and tax-ready financial reporting.",
     status: "online", // 'online' or 'deepwork'
@@ -18,7 +18,7 @@ const DEFAULT_CONFIG = {
   },
   meeting: {
     wherebyUrl: "https://whereby.com/demo-virtual-office",
-    calUrl: "https://cal.com/demo-trainee/30min",
+    calUrl: "https://cal.com/zunaid-hasan/accounting",
     whatsappNumber: "8801700000000",
     whatsappPrefill: "Hello! I am currently visiting your Virtual Office and would like to discuss my accounting & bookkeeping requirements with you."
   },
@@ -165,7 +165,7 @@ const DEFAULT_CONFIG = {
   payments: {
     payoneerEmail: "payments@zunaidhasan.com",
     payoneerLink: "https://login.payoneer.com/",
-    wiseLink: "https://wise.com/pay/me/traineedemo",
+    wiseLink: "https://wise.com/pay/me/zunaidhasan",
     stripeCardLink: "https://buy.stripe.com/demo-payment-link",
     bkashNumber: "01711-223344",
     bkashType: "Personal (Send Money)",

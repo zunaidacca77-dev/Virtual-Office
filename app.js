@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadConfig();
   initTheme();
   initCurrency();
+  initDhakaOfficeClock();
   renderApp();
   initAdTrackingPixels();
   checkUrlForPortalToken();
@@ -42,6 +43,116 @@ function initIcons() {
   }
 }
 
+// ---------------- 🛎️ EXECUTIVE VIRTUAL OFFICE AUDIO & CLOCK ----------------
+let officeAudioCtx = null;
+function getOfficeAudioContext() {
+  if (!officeAudioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) officeAudioCtx = new AudioCtx();
+  }
+  if (officeAudioCtx && officeAudioCtx.state === 'suspended') {
+    officeAudioCtx.resume();
+  }
+  return officeAudioCtx;
+}
+
+// Synthesize authentic brass counter desk bell chime (1318.5Hz + bronze harmonics)
+function playOfficeBellChime() {
+  try {
+    const ctx = getOfficeAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    
+    // Primary chime tone (High E6 ~ 1318.5 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(1318.5, now);
+    gain1.gain.setValueAtTime(0.35, now);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 1.6);
+
+    // Harmonic bronze overtone (E7 ~ 2637 Hz)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(2637, now);
+    gain2.gain.setValueAtTime(0.18, now);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now);
+    osc2.stop(now + 1.1);
+  } catch (err) {
+    console.warn("Desk bell audio note:", err);
+  }
+}
+
+// Synthesize authentic executive wooden door knock (*thump-thump*)
+function playDoorKnockSound() {
+  try {
+    const ctx = getOfficeAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const playKnockImpulse = (time) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(120, time);
+      osc.frequency.exponentialRampToValueAtTime(45, time + 0.08);
+      gain.gain.setValueAtTime(0.4, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.1);
+    };
+
+    // Double knock: first tap at now, second tap at now + 0.14s
+    playKnockImpulse(now);
+    playKnockImpulse(now + 0.14);
+  } catch (err) {
+    console.warn("Door knock audio note:", err);
+  }
+}
+
+function ringFrontDeskBell() {
+  playOfficeBellChime();
+  showToast('🛎️ Reception bell rang! Alex (AI Receptionist) is attending to your inquiry.');
+  const clockEl = document.getElementById('officeLiveClock');
+  if (clockEl) {
+    clockEl.classList.add('text-amber-200');
+    setTimeout(() => clockEl.classList.remove('text-amber-200'), 1000);
+  }
+}
+
+function initDhakaOfficeClock() {
+  function updateTime() {
+    const clockEl = document.getElementById('officeLiveClock');
+    if (!clockEl) return;
+    try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Dhaka',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      clockEl.textContent = timeStr;
+    } catch (e) {
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString();
+    }
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+
 // ---------------- CONFIG & STORAGE ----------------
 function loadConfig() {
   const saved = localStorage.getItem('virtual_office_config_v2');
@@ -50,7 +161,9 @@ function loadConfig() {
       config = JSON.parse(saved);
       // Auto-migrate avatar to local high-res portrait with cache buster
       if (!config.profile) config.profile = {};
-      config.profile.avatar = 'profile.png?v=4';
+      if (!config.profile.avatar || config.profile.avatar.includes('profile.png')) {
+        config.profile.avatar = 'profile.png?v=7';
+      }
       if (!config.profile.name || config.profile.name === 'Zunaid Ahmed') {
         config.profile.name = 'Zunaid Hasan';
       }
@@ -2261,6 +2374,8 @@ function exitClientPortal() {
 
 // ---------------- MODAL MANAGERS ----------------
 function openWherebyModal() {
+  playDoorKnockSound();
+  showToast('🚪 Knocking on Zunaid Hasan\'s executive cabin...');
   document.getElementById('wherebyIframe').src = config.meeting.wherebyUrl;
   document.getElementById('modalWhereby').classList.remove('hidden');
   initIcons();
@@ -2337,7 +2452,7 @@ function populateAdminFields() {
 
   // Update image previews
   const elAvatarPreview = document.getElementById('cfgAvatarPreview');
-  if (elAvatarPreview) elAvatarPreview.src = p.avatar || 'profile.png?v=4';
+  if (elAvatarPreview) elAvatarPreview.src = p.avatar || 'profile.png?v=7';
   const elCoverPreview = document.getElementById('cfgCoverPreview');
   if (elCoverPreview) elCoverPreview.src = p.cover || '';
 
@@ -3025,9 +3140,9 @@ function updateImagePreview(inputId, previewImgId) {
 }
 
 function resetToDefaultAvatar() {
-  document.getElementById('cfgAvatar').value = 'profile.png?v=4';
+  document.getElementById('cfgAvatar').value = 'profile.png?v=7';
   const preview = document.getElementById('cfgAvatarPreview');
-  if (preview) preview.src = 'profile.png?v=4';
+  if (preview) preview.src = 'profile.png?v=7';
   showToast('Profile picture reset to official studio portrait.');
 }
 
