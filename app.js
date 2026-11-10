@@ -687,7 +687,8 @@ function updateDualNavigation() {
   const ownerNav = document.getElementById('ownerNavbar');
   const hud = document.getElementById('ownerChamberHUD');
   const previewBanner = document.getElementById('clientPreviewBanner');
-  const floatBar = document.getElementById('adminFloatingBar');
+  const publicView = document.getElementById('publicClientView');
+  const workspaceView = document.getElementById('ownerWorkspaceView');
   const ownerAvatar = document.getElementById('navOwnerAvatar');
 
   if (ownerAvatar && config.profile && config.profile.avatar) {
@@ -696,31 +697,35 @@ function updateDualNavigation() {
 
   if (isLogged) {
     if (isClientPreviewActive) {
-      // Owner is previewing visitor interface
+      // Owner is actively previewing visitor storefront
       if (clientNav) clientNav.classList.remove('hidden');
       if (previewBanner) previewBanner.classList.remove('hidden');
+      if (publicView) publicView.classList.remove('hidden');
       if (ownerNav) ownerNav.classList.add('hidden');
       if (hud) hud.classList.add('hidden');
-      if (floatBar) floatBar.classList.add('hidden');
+      if (workspaceView) workspaceView.classList.add('hidden');
     } else {
-      // Owner is in Executive Chamber Deck
+      // Owner is in Executive Chamber Deck & Studio Workspace Grid
       if (clientNav) clientNav.classList.add('hidden');
       if (previewBanner) previewBanner.classList.add('hidden');
+      if (publicView) publicView.classList.add('hidden'); // HIDE public cover & welcome hero
       if (ownerNav) ownerNav.classList.remove('hidden');
       if (hud) hud.classList.remove('hidden');
-      if (floatBar) floatBar.classList.remove('hidden');
+      if (workspaceView) workspaceView.classList.remove('hidden'); // SHOW Executive Studio Workspace
 
       updateChamberStatusNavButtons();
       updateSubmissionsBadges();
+      renderOwnerWorkspace();
     }
   } else {
-    // Visitor view
+    // Visitor / Public mode
     isClientPreviewActive = false;
     if (clientNav) clientNav.classList.remove('hidden');
     if (previewBanner) previewBanner.classList.add('hidden');
+    if (publicView) publicView.classList.remove('hidden');
     if (ownerNav) ownerNav.classList.add('hidden');
     if (hud) hud.classList.add('hidden');
-    if (floatBar) floatBar.classList.add('hidden');
+    if (workspaceView) workspaceView.classList.add('hidden');
   }
 
   updateStatusUI();
@@ -824,6 +829,8 @@ function getSubmissions() {
 function saveSubmissions(list) {
   localStorage.setItem('virtual_office_submissions', JSON.stringify(list));
   updateSubmissionsBadges();
+  renderWorkspaceLeads();
+  updateWorkspaceStats();
 }
 
 function updateSubmissionsBadges() {
@@ -988,6 +995,483 @@ function adminLogout() {
   closeAdminDrawer();
   updateDualNavigation();
   showToast("🔒 Exited Owner Mode. You are now in Public Client View.");
+}
+
+// ================= 👑 EXECUTIVE STUDIO WORKSPACE LOGIC =================
+
+// Default Pending Payments Queue
+const DEFAULT_PAYMENTS = [
+  {
+    id: "PAY-101",
+    clientName: "Sarah Jenkins",
+    company: "Jenkins Digital Australia",
+    method: "bKash Personal",
+    senderNumber: "01712-345678",
+    trxId: "9K82JDLA7X",
+    amount: "৳15,000 ($150 USD)",
+    package: "Standard / Growth Pro",
+    status: "pending",
+    date: "10 Nov 2026, 05:40 AM"
+  },
+  {
+    id: "PAY-102",
+    clientName: "David Miller",
+    company: "Apex Ventures USA",
+    method: "Stripe / Card",
+    senderNumber: "david@apexventures.io",
+    trxId: "ch_3M48xKL92019482",
+    amount: "$450 USD (৳45,000)",
+    package: "Custom / Enterprise",
+    status: "pending",
+    date: "09 Nov 2026, 11:20 PM"
+  }
+];
+
+// Default AI Receptionist Chat Logs
+const DEFAULT_AI_CHATS = [
+  {
+    id: "CHAT-201",
+    visitorName: "Michael Thorne",
+    contact: "+1 646 555 0192",
+    source: "Live Cabin AI Assistant",
+    userQuery: "Can Zunaid deliver a 5-page SaaS landing page in Figma with design tokens by next Monday?",
+    aiReply: "Yes! Zunaid provides high-fidelity Figma files with complete design tokens. The Standard package ($150 / ৳15,000) delivers in 5-7 days with unlimited revisions. You can place your brief below or knock on the Live Cabin.",
+    intent: "High Value Lead",
+    time: "10 Nov 2026, 05:15 AM"
+  },
+  {
+    id: "CHAT-202",
+    visitorName: "Tanvir Ahmed",
+    contact: "01819-876543",
+    source: "Meta Ads Campaign Visitor",
+    userQuery: "ভাইয়া bKash এ পেমেন্ট করে কি সরাসরি প্রজেক্ট শুরু করা যাবে?",
+    aiReply: "হ্যাঁ, অবশ্যই! আপনি বিলিং সেকশন থেকে bKash Send Money করে TrxID সাবমিট করলেই জুনাইদ আহমেদ আপনার কাজ শুরু করে আপনার ডেডিকেটেড ভিআইপি পোর্টাল লিংক প্রদান করবেন।",
+    intent: "Ready to Pay (Local)",
+    time: "09 Nov 2026, 09:30 PM"
+  }
+];
+
+function getPaymentQueue() {
+  const saved = localStorage.getItem('virtual_office_payments');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error("Payment parse error", e);
+    }
+  }
+  localStorage.setItem('virtual_office_payments', JSON.stringify(DEFAULT_PAYMENTS));
+  return DEFAULT_PAYMENTS;
+}
+
+function savePaymentQueue(list) {
+  localStorage.setItem('virtual_office_payments', JSON.stringify(list));
+  renderWorkspacePayments();
+  updateWorkspaceStats();
+}
+
+function getAiChatLogs() {
+  const saved = localStorage.getItem('virtual_office_ai_chats');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error("AI chats parse error", e);
+    }
+  }
+  localStorage.setItem('virtual_office_ai_chats', JSON.stringify(DEFAULT_AI_CHATS));
+  return DEFAULT_AI_CHATS;
+}
+
+function saveAiChatLogs(logs) {
+  localStorage.setItem('virtual_office_ai_chats', JSON.stringify(logs));
+  renderWorkspaceAiChats();
+}
+
+function renderOwnerWorkspace() {
+  const deckName = document.getElementById('deckOwnerName');
+  if (deckName && config.profile) deckName.textContent = config.profile.name;
+
+  renderWorkspacePortals();
+  renderWorkspaceLeads();
+  renderWorkspacePayments();
+  renderWorkspaceAiChats();
+  updateWorkspaceStats();
+  initIcons();
+}
+
+function updateWorkspaceStats() {
+  const portals = (config.clientPortals || []).length;
+  const leads = getSubmissions().length;
+  const pendingPayments = getPaymentQueue().filter(p => p.status === 'pending').length;
+
+  const statPortals = document.getElementById('statActiveProjects');
+  const statLeads = document.getElementById('statLeadsCount');
+  const statPayments = document.getElementById('statPendingPayments');
+  const activeBadge = document.getElementById('activePortalsCountBadge');
+  const leadsBadge = document.getElementById('workspaceLeadsCountBadge');
+  const paymentsBadge = document.getElementById('pendingPaymentsBadge');
+
+  if (statPortals) statPortals.textContent = portals;
+  if (statLeads) statLeads.textContent = leads;
+  if (statPayments) statPayments.textContent = pendingPayments;
+  if (activeBadge) activeBadge.textContent = `${portals} Active`;
+  if (leadsBadge) leadsBadge.textContent = `${leads} Briefs`;
+  if (paymentsBadge) paymentsBadge.textContent = `${pendingPayments} Pending`;
+}
+
+function renderWorkspacePortals() {
+  const container = document.getElementById('workspacePortalsContainer');
+  if (!container) return;
+
+  const portals = config.clientPortals || [];
+  if (portals.length === 0) {
+    container.innerHTML = `
+      <div class="py-10 text-center text-slate-400">
+        <i data-lucide="folder-plus" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+        <p class="font-bold text-sm">No Active VIP Portals</p>
+        <p class="text-xs">Click "+ Add Portal" above to set up a workspace for a client.</p>
+      </div>
+    `;
+    initIcons();
+    return;
+  }
+
+  container.innerHTML = portals.map((client) => `
+    <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/70 space-y-4 hover:shadow-md transition">
+      <!-- Portal Top Info -->
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <div class="flex items-center gap-2">
+            <h4 class="font-bold text-slate-900 dark:text-white text-base">${client.clientName}</h4>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+              ${client.token}
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium">${client.company ? client.company + ' • ' : ''}${client.projectTitle}</p>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="copyClientSecretLink('${client.token}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 font-bold text-xs transition flex items-center gap-1">
+            <i data-lucide="link" class="w-3.5 h-3.5"></i> <span>Copy VIP Link</span>
+          </button>
+          <button onclick="viewClientPortalDirect('${client.token}')" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1" title="View Portal as Client">
+            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+          </button>
+          <button onclick="deleteClientPortal('${client.token}')" class="p-1 text-slate-400 hover:text-rose-500 transition" title="Delete Portal">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Interactive Progress Slider -->
+      <div class="space-y-1.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-accent-violet"></i> Project Progress:
+          </span>
+          <span id="progressLabel_${client.token}" class="font-black font-mono text-accent-violet text-sm">
+            ${client.progressPercent || 0}%
+          </span>
+        </div>
+        <input type="range" min="0" max="100" value="${client.progressPercent || 0}"
+          oninput="updateClientProgressLive('${client.token}', this.value)"
+          class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+      </div>
+
+      <!-- Google Drive Deliverables URL & Live File Handoff -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400">
+          Client Deliverables Link (Google Drive / Figma / Dropbox):
+        </label>
+        <div class="flex items-center gap-2">
+          <div class="flex-grow relative">
+            <i data-lucide="folder-symlink" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="driveLink_${client.token}" value="${client.deliverablesUrl || ''}" placeholder="https://drive.google.com/drive/folders/..."
+              class="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-navy-600 focus:outline-none">
+          </div>
+          <button onclick="saveClientDriveLink('${client.token}')" class="px-3.5 py-2 rounded-xl bg-navy-600 hover:bg-navy-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>Save</span>
+          </button>
+          <button onclick="openClientDriveFolder('${client.token}')" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 transition" title="Open Google Drive Deliverables">
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+          </button>
+          <button onclick="addDeliverableItem('${client.token}')" class="px-2.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center gap-1 transition" title="Upload or attach file info">
+            <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+            <span>Attach File</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  initIcons();
+}
+
+function updateClientProgressLive(token, val) {
+  const label = document.getElementById(`progressLabel_${token}`);
+  if (label) label.textContent = `${val}%`;
+
+  const client = (config.clientPortals || []).find(p => p.token === token);
+  if (client) {
+    client.progressPercent = Number(val);
+    saveConfigToStorage();
+    if (activeClientPortal && activeClientPortal.token === token) {
+      renderActivePortal(client);
+    }
+  }
+}
+
+function saveClientDriveLink(token) {
+  const input = document.getElementById(`driveLink_${token}`);
+  if (!input) return;
+  const val = input.value.trim();
+
+  const client = (config.clientPortals || []).find(p => p.token === token);
+  if (client) {
+    client.deliverablesUrl = val;
+    saveConfigToStorage();
+    showToast(`✅ Deliverables link saved for ${client.clientName}!`);
+  }
+}
+
+function openClientDriveFolder(token) {
+  const client = (config.clientPortals || []).find(p => p.token === token);
+  if (client && client.deliverablesUrl) {
+    window.open(client.deliverablesUrl, '_blank');
+  } else {
+    showToast("Please enter and save a deliverables URL first.");
+  }
+}
+
+function addDeliverableItem(token) {
+  const fileName = prompt("Enter deliverable file name (e.g. Final_Prototype_v3.fig):", "Final_Assets_Package.zip");
+  if (!fileName) return;
+
+  const client = (config.clientPortals || []).find(p => p.token === token);
+  if (client) {
+    if (!client.revisions) client.revisions = [];
+    client.revisions.unshift({
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      note: `Added new deliverable asset: ${fileName}`,
+      author: "Zunaid Ahmed"
+    });
+    saveConfigToStorage();
+    renderWorkspacePortals();
+    showToast(`📦 Deliverable "${fileName}" logged to client VIP workspace!`);
+  }
+}
+
+function viewClientPortalDirect(token) {
+  isClientPreviewActive = true;
+  updateDualNavigation();
+  loadPortalByToken(token);
+  const portalSection = document.getElementById('client-portal');
+  if (portalSection) portalSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderWorkspaceLeads() {
+  const container = document.getElementById('workspaceLeadsContainer');
+  if (!container) return;
+
+  const leads = getSubmissions();
+  if (leads.length === 0) {
+    container.innerHTML = `
+      <div class="py-8 text-center text-slate-400">
+        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-1.5 opacity-50"></i>
+        <p class="font-bold text-xs">No pending client briefs</p>
+      </div>
+    `;
+    initIcons();
+    return;
+  }
+
+  container.innerHTML = leads.map(lead => `
+    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 space-y-2.5">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-900 dark:text-white text-sm">${lead.clientName}</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${lead.source === 'Google Ads' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : lead.source === 'Meta Ads' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'}">
+            ${lead.source || 'Direct Client'}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+          <span>${lead.date}</span>
+          <button onclick="deleteSubmission('${lead.id}')" class="text-slate-400 hover:text-rose-500 p-1" title="Delete Inquiry">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-4 flex-wrap">
+        <div><span class="text-slate-400">Contact:</span> <strong class="text-slate-800 dark:text-slate-100">${lead.contact}</strong></div>
+        <div><span class="text-slate-400">Selected:</span> <span class="font-bold text-indigo-600 dark:text-indigo-400">${lead.package}</span></div>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
+        "${lead.brief}"
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-1 flex-wrap">
+        <button onclick="downloadReferenceFilesMock('${lead.id}')" class="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1">
+          <i data-lucide="paperclip" class="w-3.5 h-3.5 text-blue-500"></i>
+          <span>Reference Files (1 File Attached)</span>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button onclick="convertLeadToClientPortal('${lead.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition">
+            <i data-lucide="user-plus" class="w-3 h-3"></i>
+            <span>Create VIP Portal</span>
+          </button>
+          <button onclick="contactClientDirect('${encodeURIComponent(lead.contact)}', '${encodeURIComponent(lead.clientName)}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition">
+            <i data-lucide="message-circle" class="w-3 h-3"></i>
+            <span>WhatsApp</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  initIcons();
+}
+
+function convertLeadToClientPortal(subId) {
+  const lead = getSubmissions().find(i => i.id === subId);
+  if (!lead) return;
+
+  openAddClientModal();
+  document.getElementById('newClientName').value = lead.clientName;
+  document.getElementById('newClientProject').value = lead.package.split('(')[0].trim() + " Design Project";
+  document.getElementById('newClientToken').value = "PRJ-" + Math.floor(100 + Math.random() * 900) + "-" + lead.clientName.split(' ')[0].toUpperCase();
+}
+
+function downloadReferenceFilesMock(subId) {
+  showToast("📥 Downloading client reference brief assets...");
+}
+
+function renderWorkspacePayments() {
+  const container = document.getElementById('pendingPaymentsContainer');
+  if (!container) return;
+
+  const payments = getPaymentQueue();
+  container.innerHTML = payments.map(pay => `
+    <div class="p-3.5 rounded-2xl border ${pay.status === 'verified' ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60'} space-y-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="font-bold text-slate-900 dark:text-white text-xs block">${pay.clientName}</span>
+          <span class="text-[11px] text-slate-500">${pay.method} • <strong class="text-indigo-600 dark:text-indigo-400 font-mono">${pay.amount}</strong></span>
+        </div>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${pay.status === 'verified' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'}">
+          ${pay.status === 'verified' ? '✅ Verified' : '⏳ Pending'}
+        </span>
+      </div>
+
+      <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-mono flex items-center justify-between">
+        <span class="text-slate-400">TrxID:</span>
+        <strong class="text-slate-800 dark:text-slate-100">${pay.trxId}</strong>
+      </div>
+
+      ${pay.status === 'pending' ? `
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button onclick="approvePayment('${pay.id}')" class="flex-1 py-1 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs transition active:scale-95">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i> Approve
+          </button>
+          <button onclick="rejectPayment('${pay.id}')" class="py-1 px-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-rose-100 hover:text-rose-600 transition">
+            Reject
+          </button>
+        </div>
+      ` : `
+        <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between pt-0.5">
+          <span>Funds received & credited</span>
+          <button onclick="printVerifiedReceipt('${pay.id}')" class="hover:underline">Print Receipt</button>
+        </div>
+      `}
+    </div>
+  `).join('');
+
+  initIcons();
+}
+
+function approvePayment(payId) {
+  const list = getPaymentQueue();
+  const pay = list.find(p => p.id === payId);
+  if (pay) {
+    pay.status = 'verified';
+    savePaymentQueue(list);
+
+    if (window.confetti) {
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+    }
+    showToast(`✅ Payment ${pay.trxId} (${pay.amount}) verified & approved!`);
+  }
+}
+
+function rejectPayment(payId) {
+  if (confirm("Reject this payment transaction?")) {
+    let list = getPaymentQueue();
+    list = list.filter(p => p.id !== payId);
+    savePaymentQueue(list);
+    showToast("Transaction removed from pending queue.");
+  }
+}
+
+function printVerifiedReceipt(payId) {
+  const pay = getPaymentQueue().find(p => p.id === payId);
+  if (pay) {
+    showToast(`Generating invoice receipt for ${pay.clientName}...`);
+    window.print();
+  }
+}
+
+function renderWorkspaceAiChats() {
+  const container = document.getElementById('aiChatLogsContainer');
+  if (!container) return;
+
+  const logs = getAiChatLogs();
+  container.innerHTML = logs.map(chat => `
+    <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 space-y-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="font-bold text-slate-900 dark:text-white text-xs">${chat.visitorName}</span>
+          <span class="text-[10px] text-slate-400 block">${chat.time}</span>
+        </div>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+          ${chat.intent}
+        </span>
+      </div>
+
+      <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
+        <p class="text-slate-800 dark:text-slate-200">
+          <strong class="text-indigo-600 dark:text-indigo-400">Visitor:</strong> "${chat.userQuery}"
+        </p>
+        <p class="text-slate-500 text-[11px]">
+          <strong class="text-slate-700 dark:text-slate-300">Alex AI:</strong> "${chat.aiReply.slice(0, 110)}..."
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button onclick="replyAiVisitorWhatsApp('${chat.contact}', '${chat.visitorName}', '${encodeURIComponent(chat.userQuery)}')"
+          class="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs transition">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+          <span>WhatsApp Follow-up (${chat.contact})</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  initIcons();
+}
+
+function replyAiVisitorWhatsApp(contact, name, encodedQuery) {
+  const query = decodeURIComponent(encodedQuery);
+  const digits = contact.replace(/\D/g, '');
+  const text = encodeURIComponent(`Hi ${name}, this is Zunaid Ahmed! I noticed your inquiry to my AI Receptionist about: "${query}". How can I help you today?`);
+  if (digits.length >= 7) {
+    window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
+  } else {
+    showToast(`WhatsApp number: ${contact}`);
+  }
 }
 
 function setupKeyboardShortcuts() {
