@@ -36,6 +36,12 @@ const DEFAULT_CONFIG = {
     embedUrl: "https://tally.so/embed/mK9d5l?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1",
     useEmbeddedTally: false
   },
+  ads: {
+    metaPixelId: "",
+    googleTagId: "",
+    metaBannerText: "Welcome from Meta! Book a Free 15-Minute Live Strategy Call with Zunaid Hasan today.",
+    googleBannerText: "Welcome from Google Search! Claim your Free Project Consultation with Zunaid Hasan."
+  },
   packages: [
     {
       id: "starter",

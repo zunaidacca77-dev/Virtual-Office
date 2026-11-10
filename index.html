@@ -1338,13 +1338,15 @@
 
         <!-- Drawer Tab Navigation -->
         <div class="flex border-b border-slate-200 dark:border-slate-700 px-6 overflow-x-auto text-xs font-semibold text-slate-600 dark:text-slate-400 gap-4 flex-shrink-0">
-          <button onclick="switchAdminTab('profile')" id="admTabProfile" class="py-3 border-b-2 border-navy-600 text-navy-600 dark:text-blue-400">Profile</button>
-          <button onclick="switchAdminTab('links')" id="admTabLinks" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Meetings & Links</button>
-          <button onclick="switchAdminTab('ai')" id="admTabAi" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">AI & Forms</button>
-          <button onclick="switchAdminTab('services')" id="admTabServices" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Packages</button>
-          <button onclick="switchAdminTab('payments')" id="admTabPayments" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Payments</button>
-          <button onclick="switchAdminTab('clients')" id="admTabClients" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">VIP Portals</button>
-          <button onclick="switchAdminTab('backup')" id="admTabBackup" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white">Backup</button>
+          <button onclick="switchAdminTab('profile')" id="admTabProfile" class="py-3 border-b-2 border-navy-600 text-navy-600 dark:text-blue-400 font-bold whitespace-nowrap">Profile</button>
+          <button onclick="switchAdminTab('services')" id="admTabServices" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Packages & Pricing</button>
+          <button onclick="switchAdminTab('portfolio')" id="admTabPortfolio" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Portfolio Projects</button>
+          <button onclick="switchAdminTab('ads')" id="admTabAds" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Google & Meta Ads</button>
+          <button onclick="switchAdminTab('links')" id="admTabLinks" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Meetings & Links</button>
+          <button onclick="switchAdminTab('ai')" id="admTabAi" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">AI & Forms</button>
+          <button onclick="switchAdminTab('payments')" id="admTabPayments" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Payments</button>
+          <button onclick="switchAdminTab('clients')" id="admTabClients" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">VIP Portals</button>
+          <button onclick="switchAdminTab('backup')" id="admTabBackup" class="py-3 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-white whitespace-nowrap">Backup</button>
         </div>
 
         <!-- Drawer Tab Content (Scrollable) -->
@@ -1447,36 +1449,278 @@
             </div>
           </div>
 
-          <!-- TAB 4: PACKAGES & PRICING -->
-          <div id="admSectionServices" class="hidden space-y-4">
-            <p class="text-xs text-slate-500">Edit pricing and package titles below:</p>
+          <!-- TAB: PACKAGES & PRICING -->
+          <div id="admSectionServices" class="hidden space-y-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Service Packages & Pricing</h4>
+                <p class="text-xs text-slate-500">Edit titles, badges, USD & BDT prices, delivery times, and included deliverables</p>
+              </div>
+            </div>
             
-            <!-- Starter -->
-            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-              <span class="font-bold text-xs uppercase text-slate-700 dark:text-slate-300">Package 1 (Starter)</span>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="cfgP1USD" placeholder="USD ($)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
-                <input type="number" id="cfgP1BDT" placeholder="BDT (৳)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+            <!-- Package 1 (Starter) -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="font-bold text-xs uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Package 1 (Starter)
+                </span>
+                <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+                  <input type="radio" name="popularPkgRadio" id="cfgP1Popular" value="starter" class="text-navy-600">
+                  <span class="text-[11px] font-medium">Highlight as Most Popular</span>
+                </label>
               </div>
-              <input type="text" id="cfgP1Delivery" placeholder="Delivery time (e.g. 2-3 Days)" class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Package Title</label>
+                  <input type="text" id="cfgP1Name" placeholder="e.g. Starter / Basic" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Badge Tag</label>
+                  <input type="text" id="cfgP1Badge" placeholder="e.g. Fast Delivery" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price USD ($)</label>
+                  <input type="number" id="cfgP1USD" placeholder="50" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price BDT (৳)</label>
+                  <input type="number" id="cfgP1BDT" placeholder="5000" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Delivery Time</label>
+                  <input type="text" id="cfgP1Delivery" placeholder="e.g. 2-3 Days" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Revisions</label>
+                  <input type="text" id="cfgP1Revisions" placeholder="e.g. 2 Iterations" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-slate-500 flex items-center justify-between mb-1">
+                  <span>Included Deliverables (1 feature per line)</span>
+                  <span class="text-[10px] text-slate-400">Creates bullet points</span>
+                </label>
+                <textarea id="cfgP1Features" rows="3" placeholder="1 Landing Page or Hero Concept&#10;Clean Responsive Layout&#10;Figma / Source File Handoff" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs leading-relaxed font-mono"></textarea>
+              </div>
             </div>
 
-            <!-- Standard -->
-            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-              <span class="font-bold text-xs uppercase text-slate-700 dark:text-slate-300">Package 2 (Standard / Pro)</span>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="cfgP2USD" placeholder="USD ($)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
-                <input type="number" id="cfgP2BDT" placeholder="BDT (৳)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+            <!-- Package 2 (Standard / Pro) -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="font-bold text-xs uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Package 2 (Standard / Pro)
+                </span>
+                <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+                  <input type="radio" name="popularPkgRadio" id="cfgP2Popular" value="standard" class="text-navy-600">
+                  <span class="text-[11px] font-medium">Highlight as Most Popular</span>
+                </label>
               </div>
-              <input type="text" id="cfgP2Delivery" placeholder="Delivery time (e.g. 5-7 Days)" class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Package Title</label>
+                  <input type="text" id="cfgP2Name" placeholder="e.g. Standard / Growth Pro" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Badge Tag</label>
+                  <input type="text" id="cfgP2Badge" placeholder="e.g. Most Popular" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price USD ($)</label>
+                  <input type="number" id="cfgP2USD" placeholder="150" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price BDT (৳)</label>
+                  <input type="number" id="cfgP2BDT" placeholder="15000" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Delivery Time</label>
+                  <input type="text" id="cfgP2Delivery" placeholder="e.g. 5-7 Days" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Revisions</label>
+                  <input type="text" id="cfgP2Revisions" placeholder="e.g. Unlimited Revisions" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-slate-500 flex items-center justify-between mb-1">
+                  <span>Included Deliverables (1 feature per line)</span>
+                  <span class="text-[10px] text-slate-400">Creates bullet points</span>
+                </label>
+                <textarea id="cfgP2Features" rows="3" placeholder="Up to 5 Pages Complete Website Design&#10;Interactive Prototype & Design System&#10;Priority Meeting & Video Support" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs leading-relaxed font-mono"></textarea>
+              </div>
             </div>
 
-            <!-- Enterprise -->
-            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-              <span class="font-bold text-xs uppercase text-slate-700 dark:text-slate-300">Package 3 (Custom)</span>
+            <!-- Package 3 (Custom / Enterprise) -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="font-bold text-xs uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Package 3 (Custom / Enterprise)
+                </span>
+                <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+                  <input type="radio" name="popularPkgRadio" id="cfgP3Popular" value="enterprise" class="text-navy-600">
+                  <span class="text-[11px] font-medium">Highlight as Most Popular</span>
+                </label>
+              </div>
               <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="cfgP3USD" placeholder="USD ($)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
-                <input type="number" id="cfgP3BDT" placeholder="BDT (৳)" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Package Title</label>
+                  <input type="text" id="cfgP3Name" placeholder="e.g. Custom / Enterprise" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Badge Tag</label>
+                  <input type="text" id="cfgP3Badge" placeholder="e.g. Tailored Solution" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price USD ($)</label>
+                  <input type="number" id="cfgP3USD" placeholder="450" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price BDT (৳)</label>
+                  <input type="number" id="cfgP3BDT" placeholder="45000" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Delivery Time</label>
+                  <input type="text" id="cfgP3Delivery" placeholder="e.g. 10-14 Days" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-slate-500 block mb-1">Revisions</label>
+                  <input type="text" id="cfgP3Revisions" placeholder="e.g. VIP Continuous" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-slate-500 flex items-center justify-between mb-1">
+                  <span>Included Deliverables (1 feature per line)</span>
+                  <span class="text-[10px] text-slate-400">Creates bullet points</span>
+                </label>
+                <textarea id="cfgP3Features" rows="3" placeholder="Full-Scale Custom Application Design&#10;Complete Brand Identity & UI Kit&#10;Live Dedicated Slack/Whereby Channel" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs leading-relaxed font-mono"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: PORTFOLIO PROJECTS MANAGER -->
+          <div id="admSectionPortfolio" class="hidden space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">Portfolio Projects & Case Studies</h4>
+                <p class="text-xs text-slate-500">Edit, add, or delete projects displayed in Section 3</p>
+              </div>
+              <button type="button" onclick="openAddPortfolioModal()" class="px-3 py-1.5 rounded-xl bg-navy-600 hover:bg-navy-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition active:scale-95">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Add Project</span>
+              </button>
+            </div>
+
+            <!-- List of Projects -->
+            <div id="admPortfolioList" class="space-y-3">
+              <!-- Dynamically populated by JS -->
+            </div>
+          </div>
+
+          <!-- TAB: GOOGLE & META ADS TRAFFIC ENGINE -->
+          <div id="admSectionAds" class="hidden space-y-5">
+            <div class="p-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white rounded-2xl border border-indigo-500/30 shadow-lg space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                  <i data-lucide="target" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h4 class="font-bold text-sm text-white">Google & Meta Ads Traffic Engine</h4>
+                  <p class="text-xs text-slate-400">Attribution, personalized welcome ribbon, and conversion tracking</p>
+                </div>
+              </div>
+              
+              <div class="text-xs text-slate-300 space-y-2 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                <p>💡 <strong>How it works:</strong> When creating ads in Meta Ads Manager or Google Ads, copy and paste the links below into your Ad's Destination URL:</p>
+                <ul class="list-disc list-inside space-y-1 text-slate-300 ml-1">
+                  <li><strong>Targeted Banner:</strong> Visitors arriving through these links automatically see a personalized consultation ribbon.</li>
+                  <li><strong>Automatic Attribution:</strong> When a visitor submits a project brief or chats with Alex, their lead is automatically tagged with <strong>[Meta Ads]</strong> or <strong>[Google Ads]</strong> in your Executive Deck!</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Campaign URL Cards -->
+            <div class="space-y-3">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Ready-to-Use Ad Campaign Links</h5>
+              
+              <!-- Meta Ads -->
+              <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <i data-lucide="target" class="w-4 h-4 text-purple-500"></i> Meta Ads (Facebook & Instagram)
+                  </span>
+                  <button type="button" onclick="copyAdCampaignUrl('meta')" class="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition">
+                    <i data-lucide="copy" class="w-3 h-3"></i> Copy Link
+                  </button>
+                </div>
+                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-purple-600 dark:text-purple-400 break-all select-all" id="metaCampaignUrlDisplay">
+                  https://zunaid.stratmarkbd.com/?utm_source=meta_ads&utm_campaign=cloud_accounting
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Paste into Facebook Ad "Website URL"</span>
+                  <a href="?utm_source=meta_ads" target="_blank" class="text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-semibold">
+                    <span>Test in new tab</span> <i data-lucide="external-link" class="w-3 h-3"></i>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Google Ads -->
+              <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <i data-lucide="search" class="w-4 h-4 text-emerald-500"></i> Google Ads (Search & Performance Max)
+                  </span>
+                  <button type="button" onclick="copyAdCampaignUrl('google')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition">
+                    <i data-lucide="copy" class="w-3 h-3"></i> Copy Link
+                  </button>
+                </div>
+                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 break-all select-all" id="googleCampaignUrlDisplay">
+                  https://zunaid.stratmarkbd.com/?utm_source=google_ads&utm_campaign=cloud_accounting
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Paste into Google Ads "Final URL"</span>
+                  <a href="?utm_source=google_ads" target="_blank" class="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
+                    <span>Test in new tab</span> <i data-lucide="external-link" class="w-3 h-3"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ad Conversion Pixels -->
+            <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Conversion Pixels & Customization (Optional)</h5>
+              
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Meta Pixel ID (Facebook Pixel)</label>
+                <input type="text" id="cfgMetaPixelId" placeholder="e.g. 123456789012345" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-xs">
+                <span class="text-[10px] text-slate-400">Fires PageView & Lead conversions when visitors order or contact.</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Google Tag / Conversion ID (GTAG / AW)</label>
+                <input type="text" id="cfgGoogleTagId" placeholder="e.g. AW-123456789 or G-XXXXXXXXXX" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-xs">
+                <span class="text-[10px] text-slate-400">Connects Google Ads conversions to client brief submissions.</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Meta Ads Custom Welcome Ribbon Text</label>
+                <input type="text" id="cfgMetaBannerText" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Google Ads Custom Welcome Ribbon Text</label>
+                <input type="text" id="cfgGoogleBannerText" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
               </div>
             </div>
           </div>
@@ -1660,6 +1904,78 @@
             <a href="#order-desk" onclick="closePortfolioModal()" class="px-5 py-2 rounded-xl text-xs font-bold bg-navy-600 text-white shadow-sm hover:bg-navy-700">Request Similar Project</a>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT PORTFOLIO PROJECT -->
+  <div id="modalEditPortfolio" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" onclick="closeEditPortfolioModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 max-h-[90vh]">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-base text-slate-900 dark:text-white" id="portModalHeader">Edit Portfolio Project</h3>
+            <p class="text-xs text-slate-500">Update project details, results, and case study visuals</p>
+          </div>
+          <button type="button" onclick="closeEditPortfolioModal()" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form onsubmit="handleSavePortfolioSubmit(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+          <input type="hidden" id="portEditId">
+
+          <div>
+            <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Project Title *</label>
+            <input type="text" id="portEditTitle" required placeholder="e.g. FinFlow - Wealth Management Suite" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Category Filter</label>
+              <select id="portEditCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+                <option value="accounting">Cloud Accounting</option>
+                <option value="uiux">UI/UX & Mobile</option>
+                <option value="webdev">Web Development</option>
+                <option value="ecommerce">eCommerce Store</option>
+                <option value="branding">Branding & Identity</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Category Badge Label *</label>
+              <input type="text" id="portEditCategoryLabel" required placeholder="e.g. Cloud Accounting & Tax" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Cover Image URL *</label>
+            <input type="text" id="portEditImage" required placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+          </div>
+
+          <div>
+            <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Key Results / Achievement Badge</label>
+            <input type="text" id="portEditResults" placeholder="e.g. +140% User Engagement, 4.9 Rating" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+          </div>
+
+          <div>
+            <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Tools & Tech Stack (comma separated)</label>
+            <input type="text" id="portEditTools" placeholder="e.g. QuickBooks, Xero, Excel, Wave" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">
+          </div>
+
+          <div>
+            <label class="block font-bold uppercase tracking-wider mb-1 text-slate-700 dark:text-slate-300">Detailed Case Study Description *</label>
+            <textarea id="portEditDesc" rows="3" required placeholder="Explain client goals, deliverables completed, and outcomes achieved..." class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs leading-relaxed"></textarea>
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+            <button type="button" onclick="closeEditPortfolioModal()" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold transition">Cancel</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-navy-600 hover:bg-navy-700 text-white font-bold shadow-md transition flex items-center gap-1.5 active:scale-95">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>Save Project</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

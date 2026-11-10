@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initCurrency();
   renderApp();
+  initAdTrackingPixels();
   checkUrlForPortalToken();
   checkUrlForCampaign();
   setupKeyboardShortcuts();
@@ -55,6 +56,15 @@ function loadConfig() {
       }
       if (!config.profile.title || config.profile.title.includes('UI/UX')) {
         config.profile.title = 'Cloud Accounting Specialist';
+      }
+      if (!config.ads) {
+        config.ads = JSON.parse(JSON.stringify(DEFAULT_CONFIG.ads));
+      }
+      if (!config.portfolio || !Array.isArray(config.portfolio) || config.portfolio.length === 0) {
+        config.portfolio = JSON.parse(JSON.stringify(DEFAULT_CONFIG.portfolio));
+      }
+      if (!config.packages || !Array.isArray(config.packages) || config.packages.length === 0) {
+        config.packages = JSON.parse(JSON.stringify(DEFAULT_CONFIG.packages));
       }
       saveConfigToStorage();
     } catch (e) {
@@ -349,7 +359,7 @@ function renderPackages() {
 
           <!-- Features List -->
           <ul class="space-y-3 mb-8 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-            ${pkg.features.map(f => `
+            ${(pkg.features || []).map(f => `
               <li class="flex items-start gap-2">
                 <i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0"></i>
                 <span>${f}</span>
@@ -363,14 +373,27 @@ function renderPackages() {
             ? 'bg-navy-600 hover:bg-navy-700 text-white shadow-md' 
             : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
         }">
-          <span>[ Select ${pkg.name.split('/')[0]} ]</span>
+          <span>[ Select ${pkg.name.split('/')[0].trim()} ]</span>
           <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
       </div>
     `;
   }).join('');
 
+  updatePackageOrderSelect();
   initIcons();
+}
+
+function updatePackageOrderSelect() {
+  const select = document.getElementById('orderPackageSelect');
+  if (!select || !config.packages) return;
+  const currentVal = select.value;
+  select.innerHTML = config.packages.map(pkg => {
+    return `<option value="${pkg.id}" ${pkg.popular ? 'selected' : ''}>${pkg.name} ($${pkg.priceUSD} / ৳${(pkg.priceBDT || 0).toLocaleString()}) ${pkg.popular ? '[Recommended]' : ''}</option>`;
+  }).join('');
+  if (currentVal && config.packages.some(p => p.id === currentVal)) {
+    select.value = currentVal;
+  }
 }
 
 function selectPackageOrder(packageId) {
@@ -1125,6 +1148,9 @@ function handleProjectOrderSubmit(e) {
   const currentSubs = getSubmissions();
   currentSubs.unshift(newSubmission);
   saveSubmissions(currentSubs);
+
+  // Trigger Ad Conversion Pixel Event (Meta Lead / Google Lead)
+  trackLeadConversion(newSubmission.source, pkgObj ? pkgObj.priceUSD : 50);
 
   // Show active order banner in Section 5
   const banner = document.getElementById('activeOrderInvoiceBanner');
@@ -2060,10 +2086,14 @@ function checkUrlForCampaign() {
       const srcLow = source.toLowerCase();
       if (srcLow.includes('meta') || srcLow.includes('fb') || srcLow.includes('facebook') || srcLow.includes('instagram')) {
         badge.textContent = "🎯 Meta Ads Special";
-        msg.textContent = `Welcome from Meta! Book a Free 15-Minute Live Strategy Call with ${config.profile.name} today.`;
+        msg.textContent = (config.ads && config.ads.metaBannerText)
+          ? config.ads.metaBannerText
+          : `Welcome from Meta! Book a Free 15-Minute Live Strategy Call with ${config.profile.name} today.`;
       } else if (srcLow.includes('google') || srcLow.includes('adwords') || srcLow.includes('gads')) {
         badge.textContent = "🔍 Google Ads Special";
-        msg.textContent = `Welcome from Google Search! Claim your Free Project Consultation with ${config.profile.name}.`;
+        msg.textContent = (config.ads && config.ads.googleBannerText)
+          ? config.ads.googleBannerText
+          : `Welcome from Google Search! Claim your Free Project Consultation with ${config.profile.name}.`;
       } else {
         badge.textContent = `🎯 ${source.toUpperCase()} Special`;
         msg.textContent = `Exclusive Project Consultation with ${config.profile.name}. Explore packages below.`;
@@ -2250,22 +2280,26 @@ function closeAdminDrawer() {
 }
 
 function switchAdminTab(tabName) {
-  const tabs = ['profile', 'links', 'ai', 'services', 'payments', 'clients', 'backup'];
+  const tabs = ['profile', 'services', 'portfolio', 'ads', 'links', 'ai', 'payments', 'clients', 'backup'];
   tabs.forEach(t => {
     const btn = document.getElementById(`admTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
     const sec = document.getElementById(`admSection${t.charAt(0).toUpperCase() + t.slice(1)}`);
     if (btn && sec) {
       if (t === tabName) {
-        btn.className = "py-3 border-b-2 border-navy-600 text-navy-600 dark:text-blue-400 font-bold";
+        btn.className = "py-3 border-b-2 border-navy-600 text-navy-600 dark:text-blue-400 font-bold whitespace-nowrap";
         sec.classList.remove('hidden');
       } else {
-        btn.className = "py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white";
+        btn.className = "py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white whitespace-nowrap";
         sec.classList.add('hidden');
       }
     }
   });
   if (tabName === 'clients') {
     renderAdminClientList();
+  } else if (tabName === 'portfolio') {
+    renderAdminPortfolioList();
+  } else if (tabName === 'ads') {
+    updateAdsCampaignDisplays();
   }
 }
 
@@ -2292,17 +2326,77 @@ function populateAdminFields() {
   document.getElementById('cfgTallyUrl').value = config.tally.embedUrl || '';
   document.getElementById('cfgFormProvider').value = (config.tally && config.tally.useEmbeddedTally) ? 'tally' : 'builtin';
 
-  // Packages
-  document.getElementById('cfgP1USD').value = config.packages[0].priceUSD;
-  document.getElementById('cfgP1BDT').value = config.packages[0].priceBDT;
-  document.getElementById('cfgP1Delivery').value = config.packages[0].deliveryTime;
+  // Packages & Pricing
+  if (config.packages && config.packages.length >= 3) {
+    // Package 1
+    const p1 = config.packages[0];
+    const elP1Name = document.getElementById('cfgP1Name');
+    if (elP1Name) elP1Name.value = p1.name || '';
+    const elP1Badge = document.getElementById('cfgP1Badge');
+    if (elP1Badge) elP1Badge.value = p1.badge || '';
+    const elP1USD = document.getElementById('cfgP1USD');
+    if (elP1USD) elP1USD.value = p1.priceUSD !== undefined ? p1.priceUSD : 50;
+    const elP1BDT = document.getElementById('cfgP1BDT');
+    if (elP1BDT) elP1BDT.value = p1.priceBDT !== undefined ? p1.priceBDT : 5000;
+    const elP1Delivery = document.getElementById('cfgP1Delivery');
+    if (elP1Delivery) elP1Delivery.value = p1.deliveryTime || '2-3 Days';
+    const elP1Revisions = document.getElementById('cfgP1Revisions');
+    if (elP1Revisions) elP1Revisions.value = p1.revisions || '2 Iterations';
+    const elP1Features = document.getElementById('cfgP1Features');
+    if (elP1Features) elP1Features.value = Array.isArray(p1.features) ? p1.features.join('\n') : '';
+    const elP1Pop = document.getElementById('cfgP1Popular');
+    if (elP1Pop) elP1Pop.checked = !!p1.popular;
 
-  document.getElementById('cfgP2USD').value = config.packages[1].priceUSD;
-  document.getElementById('cfgP2BDT').value = config.packages[1].priceBDT;
-  document.getElementById('cfgP2Delivery').value = config.packages[1].deliveryTime;
+    // Package 2
+    const p2 = config.packages[1];
+    const elP2Name = document.getElementById('cfgP2Name');
+    if (elP2Name) elP2Name.value = p2.name || '';
+    const elP2Badge = document.getElementById('cfgP2Badge');
+    if (elP2Badge) elP2Badge.value = p2.badge || '';
+    const elP2USD = document.getElementById('cfgP2USD');
+    if (elP2USD) elP2USD.value = p2.priceUSD !== undefined ? p2.priceUSD : 150;
+    const elP2BDT = document.getElementById('cfgP2BDT');
+    if (elP2BDT) elP2BDT.value = p2.priceBDT !== undefined ? p2.priceBDT : 15000;
+    const elP2Delivery = document.getElementById('cfgP2Delivery');
+    if (elP2Delivery) elP2Delivery.value = p2.deliveryTime || '5-7 Days';
+    const elP2Revisions = document.getElementById('cfgP2Revisions');
+    if (elP2Revisions) elP2Revisions.value = p2.revisions || 'Unlimited Revisions';
+    const elP2Features = document.getElementById('cfgP2Features');
+    if (elP2Features) elP2Features.value = Array.isArray(p2.features) ? p2.features.join('\n') : '';
+    const elP2Pop = document.getElementById('cfgP2Popular');
+    if (elP2Pop) elP2Pop.checked = !!p2.popular;
 
-  document.getElementById('cfgP3USD').value = config.packages[2].priceUSD;
-  document.getElementById('cfgP3BDT').value = config.packages[2].priceBDT;
+    // Package 3
+    const p3 = config.packages[2];
+    const elP3Name = document.getElementById('cfgP3Name');
+    if (elP3Name) elP3Name.value = p3.name || '';
+    const elP3Badge = document.getElementById('cfgP3Badge');
+    if (elP3Badge) elP3Badge.value = p3.badge || '';
+    const elP3USD = document.getElementById('cfgP3USD');
+    if (elP3USD) elP3USD.value = p3.priceUSD !== undefined ? p3.priceUSD : 450;
+    const elP3BDT = document.getElementById('cfgP3BDT');
+    if (elP3BDT) elP3BDT.value = p3.priceBDT !== undefined ? p3.priceBDT : 45000;
+    const elP3Delivery = document.getElementById('cfgP3Delivery');
+    if (elP3Delivery) elP3Delivery.value = p3.deliveryTime || '10-14 Days';
+    const elP3Revisions = document.getElementById('cfgP3Revisions');
+    if (elP3Revisions) elP3Revisions.value = p3.revisions || 'VIP Continuous';
+    const elP3Features = document.getElementById('cfgP3Features');
+    if (elP3Features) elP3Features.value = Array.isArray(p3.features) ? p3.features.join('\n') : '';
+    const elP3Pop = document.getElementById('cfgP3Popular');
+    if (elP3Pop) elP3Pop.checked = !!p3.popular;
+  }
+
+  // Google & Meta Ads
+  if (config.ads) {
+    const elMetaPix = document.getElementById('cfgMetaPixelId');
+    if (elMetaPix) elMetaPix.value = config.ads.metaPixelId || '';
+    const elGTag = document.getElementById('cfgGoogleTagId');
+    if (elGTag) elGTag.value = config.ads.googleTagId || '';
+    const elMetaBanner = document.getElementById('cfgMetaBannerText');
+    if (elMetaBanner) elMetaBanner.value = config.ads.metaBannerText || '';
+    const elGBanner = document.getElementById('cfgGoogleBannerText');
+    if (elGBanner) elGBanner.value = config.ads.googleBannerText || '';
+  }
 
   // Payments
   document.getElementById('cfgPayoneerLink').value = config.payments.payoneerLink || '';
@@ -2314,6 +2408,8 @@ function populateAdminFields() {
   // Security Master PIN
   document.getElementById('cfgAdminPin').value = (config.security && config.security.adminPin) ? config.security.adminPin : "7788";
 
+  updateAdsCampaignDisplays();
+  renderAdminPortfolioList();
   renderAdminClientList();
 }
 
@@ -2342,17 +2438,81 @@ function saveAdminChanges() {
   config.tally.useEmbeddedTally = (document.getElementById('cfgFormProvider').value === 'tally');
   renderFormMode();
 
-  config.packages[0].priceUSD = Number(document.getElementById('cfgP1USD').value);
-  config.packages[0].priceBDT = Number(document.getElementById('cfgP1BDT').value);
-  config.packages[0].deliveryTime = document.getElementById('cfgP1Delivery').value;
+  // Save Packages & Pricing
+  if (config.packages && config.packages.length >= 3) {
+    // Package 1
+    const p1Name = document.getElementById('cfgP1Name');
+    if (p1Name && p1Name.value.trim()) config.packages[0].name = p1Name.value.trim();
+    const p1Badge = document.getElementById('cfgP1Badge');
+    if (p1Badge) config.packages[0].badge = p1Badge.value.trim();
+    const p1USD = document.getElementById('cfgP1USD');
+    if (p1USD) config.packages[0].priceUSD = Number(p1USD.value) || 0;
+    const p1BDT = document.getElementById('cfgP1BDT');
+    if (p1BDT) config.packages[0].priceBDT = Number(p1BDT.value) || 0;
+    const p1Delivery = document.getElementById('cfgP1Delivery');
+    if (p1Delivery) config.packages[0].deliveryTime = p1Delivery.value.trim();
+    const p1Revisions = document.getElementById('cfgP1Revisions');
+    if (p1Revisions) config.packages[0].revisions = p1Revisions.value.trim();
+    const p1Features = document.getElementById('cfgP1Features');
+    if (p1Features) {
+      config.packages[0].features = p1Features.value.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+    const p1Pop = document.getElementById('cfgP1Popular');
+    config.packages[0].popular = p1Pop ? p1Pop.checked : false;
 
-  config.packages[1].priceUSD = Number(document.getElementById('cfgP2USD').value);
-  config.packages[1].priceBDT = Number(document.getElementById('cfgP2BDT').value);
-  config.packages[1].deliveryTime = document.getElementById('cfgP2Delivery').value;
+    // Package 2
+    const p2Name = document.getElementById('cfgP2Name');
+    if (p2Name && p2Name.value.trim()) config.packages[1].name = p2Name.value.trim();
+    const p2Badge = document.getElementById('cfgP2Badge');
+    if (p2Badge) config.packages[1].badge = p2Badge.value.trim();
+    const p2USD = document.getElementById('cfgP2USD');
+    if (p2USD) config.packages[1].priceUSD = Number(p2USD.value) || 0;
+    const p2BDT = document.getElementById('cfgP2BDT');
+    if (p2BDT) config.packages[1].priceBDT = Number(p2BDT.value) || 0;
+    const p2Delivery = document.getElementById('cfgP2Delivery');
+    if (p2Delivery) config.packages[1].deliveryTime = p2Delivery.value.trim();
+    const p2Revisions = document.getElementById('cfgP2Revisions');
+    if (p2Revisions) config.packages[1].revisions = p2Revisions.value.trim();
+    const p2Features = document.getElementById('cfgP2Features');
+    if (p2Features) {
+      config.packages[1].features = p2Features.value.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+    const p2Pop = document.getElementById('cfgP2Popular');
+    config.packages[1].popular = p2Pop ? p2Pop.checked : false;
 
-  config.packages[2].priceUSD = Number(document.getElementById('cfgP3USD').value);
-  config.packages[2].priceBDT = Number(document.getElementById('cfgP3BDT').value);
+    // Package 3
+    const p3Name = document.getElementById('cfgP3Name');
+    if (p3Name && p3Name.value.trim()) config.packages[2].name = p3Name.value.trim();
+    const p3Badge = document.getElementById('cfgP3Badge');
+    if (p3Badge) config.packages[2].badge = p3Badge.value.trim();
+    const p3USD = document.getElementById('cfgP3USD');
+    if (p3USD) config.packages[2].priceUSD = Number(p3USD.value) || 0;
+    const p3BDT = document.getElementById('cfgP3BDT');
+    if (p3BDT) config.packages[2].priceBDT = Number(p3BDT.value) || 0;
+    const p3Delivery = document.getElementById('cfgP3Delivery');
+    if (p3Delivery) config.packages[2].deliveryTime = p3Delivery.value.trim();
+    const p3Revisions = document.getElementById('cfgP3Revisions');
+    if (p3Revisions) config.packages[2].revisions = p3Revisions.value.trim();
+    const p3Features = document.getElementById('cfgP3Features');
+    if (p3Features) {
+      config.packages[2].features = p3Features.value.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+    const p3Pop = document.getElementById('cfgP3Popular');
+    config.packages[2].popular = p3Pop ? p3Pop.checked : false;
+  }
 
+  // Save Ads Settings
+  if (!config.ads) config.ads = {};
+  const elMetaPix = document.getElementById('cfgMetaPixelId');
+  if (elMetaPix) config.ads.metaPixelId = elMetaPix.value.trim();
+  const elGTag = document.getElementById('cfgGoogleTagId');
+  if (elGTag) config.ads.googleTagId = elGTag.value.trim();
+  const elMetaBanner = document.getElementById('cfgMetaBannerText');
+  if (elMetaBanner) config.ads.metaBannerText = elMetaBanner.value.trim();
+  const elGBanner = document.getElementById('cfgGoogleBannerText');
+  if (elGBanner) config.ads.googleBannerText = elGBanner.value.trim();
+
+  // Payments
   config.payments.payoneerLink = document.getElementById('cfgPayoneerLink').value;
   config.payments.payoneerEmail = document.getElementById('cfgPayoneerEmail').value;
   config.payments.bkashNumber = document.getElementById('cfgBkashNumber').value;
@@ -2360,9 +2520,13 @@ function saveAdminChanges() {
   config.payments.qrCodeUrl = document.getElementById('cfgQrCodeUrl').value;
 
   saveConfigToStorage();
+  initAdTrackingPixels();
   renderApp();
+  renderPackages();
+  renderPortfolio('all');
+  updatePackageOrderSelect();
   closeAdminDrawer();
-  showToast('✅ Office profile updated successfully!');
+  showToast('✅ Office profile and settings updated successfully!');
 }
 
 // Admin VIP Clients Manager
@@ -2492,6 +2656,247 @@ function resetConfigToDefault() {
     renderApp();
     populateAdminFields();
     showToast('Reset to default settings.');
+  }
+}
+
+// ---------------- 📂 PORTFOLIO PROJECTS MANAGER ----------------
+function renderAdminPortfolioList() {
+  const container = document.getElementById('admPortfolioList');
+  if (!container) return;
+
+  if (!config.portfolio || config.portfolio.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+        <p class="font-bold text-xs">No portfolio projects found</p>
+        <p class="text-[11px]">Click "+ Add Project" above to create one.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = config.portfolio.map((item) => `
+    <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 transition">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <img src="${item.image}" alt="${escapeHtml(item.title)}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700">
+        <div class="overflow-hidden">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-navy-600 dark:text-blue-400">${escapeHtml(item.categoryLabel || item.category)}</span>
+            ${item.results ? `<span class="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">${escapeHtml(item.results)}</span>` : ''}
+          </div>
+          <h5 class="font-bold text-xs text-slate-900 dark:text-white truncate">${escapeHtml(item.title)}</h5>
+          <p class="text-[11px] text-slate-400 truncate">${(item.tools || []).map(t => escapeHtml(t)).join(', ')}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <button type="button" onclick="openPortfolioModal(${item.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Preview Case Study">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+        </button>
+        <button type="button" onclick="editPortfolioItem(${item.id})" class="p-1.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition font-bold text-xs flex items-center gap-1" title="Edit Project">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Edit</span>
+        </button>
+        <button type="button" onclick="deletePortfolioItem(${item.id})" class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Delete Project">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  initIcons();
+}
+
+function openAddPortfolioModal() {
+  document.getElementById('portModalHeader').textContent = 'Add New Portfolio Project';
+  document.getElementById('portEditId').value = '';
+  document.getElementById('portEditTitle').value = '';
+  document.getElementById('portEditCategory').value = 'accounting';
+  document.getElementById('portEditCategoryLabel').value = 'Cloud Accounting & Tax';
+  document.getElementById('portEditImage').value = '';
+  document.getElementById('portEditResults').value = '';
+  document.getElementById('portEditTools').value = '';
+  document.getElementById('portEditDesc').value = '';
+  document.getElementById('modalEditPortfolio').classList.remove('hidden');
+  initIcons();
+}
+
+function editPortfolioItem(id) {
+  const item = config.portfolio.find(p => p.id === id);
+  if (!item) return;
+  document.getElementById('portModalHeader').textContent = `Edit Project: ${item.title}`;
+  document.getElementById('portEditId').value = item.id;
+  document.getElementById('portEditTitle').value = item.title || '';
+  document.getElementById('portEditCategory').value = item.category || 'accounting';
+  document.getElementById('portEditCategoryLabel').value = item.categoryLabel || '';
+  document.getElementById('portEditImage').value = item.image || '';
+  document.getElementById('portEditResults').value = item.results || '';
+  document.getElementById('portEditTools').value = Array.isArray(item.tools) ? item.tools.join(', ') : (item.tools || '');
+  document.getElementById('portEditDesc').value = item.description || '';
+  document.getElementById('modalEditPortfolio').classList.remove('hidden');
+  initIcons();
+}
+
+function closeEditPortfolioModal() {
+  document.getElementById('modalEditPortfolio').classList.add('hidden');
+}
+
+function handleSavePortfolioSubmit(e) {
+  e.preventDefault();
+  const editIdStr = document.getElementById('portEditId').value;
+  const title = document.getElementById('portEditTitle').value.trim();
+  const category = document.getElementById('portEditCategory').value;
+  const categoryLabel = document.getElementById('portEditCategoryLabel').value.trim();
+  const image = document.getElementById('portEditImage').value.trim();
+  const results = document.getElementById('portEditResults').value.trim();
+  const tools = document.getElementById('portEditTools').value.split(',').map(s => s.trim()).filter(Boolean);
+  const description = document.getElementById('portEditDesc').value.trim();
+
+  if (editIdStr) {
+    const editId = Number(editIdStr) || editIdStr;
+    const idx = config.portfolio.findIndex(p => p.id === editId || p.id == editIdStr);
+    if (idx !== -1) {
+      config.portfolio[idx] = {
+        ...config.portfolio[idx],
+        title,
+        category,
+        categoryLabel,
+        image,
+        results,
+        tools,
+        description
+      };
+    }
+  } else {
+    const newItem = {
+      id: Date.now(),
+      title,
+      category,
+      categoryLabel,
+      image,
+      results,
+      tools,
+      description
+    };
+    config.portfolio.unshift(newItem);
+  }
+
+  saveConfigToStorage();
+  renderPortfolio('all');
+  renderAdminPortfolioList();
+  closeEditPortfolioModal();
+  showToast('✅ Portfolio project saved successfully!');
+}
+
+function deletePortfolioItem(id) {
+  const item = config.portfolio.find(p => p.id === id);
+  const name = item ? item.title : 'this project';
+  if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+  config.portfolio = config.portfolio.filter(p => p.id !== id);
+  saveConfigToStorage();
+  renderPortfolio('all');
+  renderAdminPortfolioList();
+  showToast('🗑️ Project removed from portfolio');
+}
+
+// ---------------- 🎯 GOOGLE & META ADS ENGINE ----------------
+function updateAdsCampaignDisplays() {
+  const base = window.location.origin + window.location.pathname;
+  const metaDisplay = document.getElementById('metaCampaignUrlDisplay');
+  const googleDisplay = document.getElementById('googleCampaignUrlDisplay');
+  if (metaDisplay) {
+    metaDisplay.textContent = `${base}?utm_source=meta_ads&utm_campaign=cloud_accounting`;
+  }
+  if (googleDisplay) {
+    googleDisplay.textContent = `${base}?utm_source=google_ads&utm_campaign=cloud_accounting`;
+  }
+}
+
+function copyAdCampaignUrl(type) {
+  const base = window.location.origin + window.location.pathname;
+  let url = '';
+  let label = '';
+  if (type === 'meta') {
+    url = `${base}?utm_source=meta_ads&utm_campaign=cloud_accounting`;
+    label = 'Meta Ads Tracking Link';
+  } else if (type === 'google') {
+    url = `${base}?utm_source=google_ads&utm_campaign=cloud_accounting`;
+    label = 'Google Ads Tracking Link';
+  } else {
+    url = base;
+    label = 'Clean Public Link';
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast(`📋 Copied ${label} to clipboard!`);
+    }).catch(() => {
+      prompt('Copy URL:', url);
+    });
+  } else {
+    prompt('Copy URL:', url);
+  }
+}
+
+function initAdTrackingPixels() {
+  if (!config.ads) return;
+  
+  // Meta Pixel initialization
+  if (config.ads.metaPixelId && !window._fbq_initialized) {
+    try {
+      window._fbq_initialized = true;
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      if (window.fbq) {
+        window.fbq('init', config.ads.metaPixelId);
+        window.fbq('track', 'PageView');
+      }
+    } catch(err) {
+      console.warn('Meta Pixel init error', err);
+    }
+  }
+
+  // Google Tag (gtag.js) initialization
+  if (config.ads.googleTagId && !window._gtag_initialized) {
+    try {
+      window._gtag_initialized = true;
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${config.ads.googleTagId}`;
+      document.head.appendChild(script);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      window.gtag('js', new Date());
+      window.gtag('config', config.ads.googleTagId);
+    } catch(err) {
+      console.warn('Google Tag init error', err);
+    }
+  }
+}
+
+function trackLeadConversion(source, value) {
+  try {
+    if (window.fbq) {
+      window.fbq('track', 'Lead', {
+        content_name: source || 'Direct Inquiry',
+        value: value || 50,
+        currency: 'USD'
+      });
+    }
+    if (window.gtag && config.ads && config.ads.googleTagId) {
+      window.gtag('event', 'generate_lead', {
+        event_category: 'engagement',
+        event_label: source || 'Direct Inquiry',
+        value: value || 50
+      });
+    }
+  } catch (e) {
+    console.warn('Ad conversion tracking error', e);
   }
 }
 
