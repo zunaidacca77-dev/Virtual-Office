@@ -49,7 +49,13 @@ function loadConfig() {
       config = JSON.parse(saved);
       // Auto-migrate avatar to local high-res portrait with cache buster
       if (!config.profile) config.profile = {};
-      config.profile.avatar = 'profile.png?v=2';
+      config.profile.avatar = 'profile.png?v=4';
+      if (!config.profile.name || config.profile.name === 'Zunaid Ahmed') {
+        config.profile.name = 'Zunaid Hasan';
+      }
+      if (!config.profile.title || config.profile.title.includes('UI/UX')) {
+        config.profile.title = 'Cloud Accounting Specialist';
+      }
       saveConfigToStorage();
     } catch (e) {
       console.error("Config parse error, reverting to default", e);
@@ -1468,7 +1474,7 @@ function contactClientDirect(encodedContact, encodedName) {
   const contact = decodeURIComponent(encodedContact);
   const name = decodeURIComponent(encodedName);
   const digits = contact.replace(/\D/g, '');
-  const greeting = encodeURIComponent(`Hello ${name}, thank you for your project brief at my Virtual Office! I am Zunaid Ahmed, let's discuss details.`);
+  const greeting = encodeURIComponent(`Hello ${name}, thank you for your project brief at my Virtual Office! I am Zunaid Hasan, let's discuss details.`);
   if (digits.length >= 7) {
     window.open(`https://wa.me/${digits}?text=${greeting}`, '_blank');
   } else {
@@ -1791,7 +1797,7 @@ function addDeliverableItem(token) {
     client.revisions.unshift({
       date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       note: `Added new deliverable asset: ${fileName}`,
-      author: "Zunaid Ahmed"
+      author: "Zunaid Hasan"
     });
     saveConfigToStorage();
     renderWorkspacePortals();
@@ -2002,7 +2008,7 @@ function renderWorkspaceAiChats() {
 function replyAiVisitorWhatsApp(contact, name, encodedQuery) {
   const query = decodeURIComponent(encodedQuery);
   const digits = contact.replace(/\D/g, '');
-  const text = encodeURIComponent(`Hi ${name}, this is Zunaid Ahmed! I noticed your inquiry to my AI Receptionist about: "${query}". How can I help you today?`);
+  const text = encodeURIComponent(`Hi ${name}, this is Zunaid Hasan! I noticed your inquiry to my AI Receptionist about: "${query}". How can I help you today?`);
   if (digits.length >= 7) {
     window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
   } else {
