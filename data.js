@@ -6,7 +6,7 @@ const DEFAULT_CONFIG = {
   profile: {
     name: "Zunaid Ahmed",
     title: "Senior UI/UX Designer & Digital Solutions Architect",
-    avatar: "profile.png",
+    avatar: "profile.png?v=2",
     cover: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&h=600&q=80",
     bio: "I craft high-converting digital interfaces, web applications, and scalable design systems for global brands. Step into my virtual office to collaborate live or kick off your next project below.",
     status: "online", // 'online' or 'deepwork'

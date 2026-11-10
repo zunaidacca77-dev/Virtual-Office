@@ -37,11 +37,10 @@ function loadConfig() {
   if (saved) {
     try {
       config = JSON.parse(saved);
-      // Auto-migrate avatar to local profile picture if previously using Unsplash placeholder
-      if (config.profile && config.profile.avatar && config.profile.avatar.includes('unsplash.com')) {
-        config.profile.avatar = 'profile.png';
-        saveConfigToStorage();
-      }
+      // Auto-migrate avatar to local high-res portrait with cache buster
+      if (!config.profile) config.profile = {};
+      config.profile.avatar = 'profile.png?v=2';
+      saveConfigToStorage();
     } catch (e) {
       console.error("Config parse error, reverting to default", e);
       config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
