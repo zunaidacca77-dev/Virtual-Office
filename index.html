@@ -107,20 +107,22 @@
 
   <!-- ================= TOP NAVIGATION BAR ================= -->
   <header class="sticky top-0 z-40 w-full glass-nav border-b border-slate-200/80 dark:border-slate-800/80 transition-all">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    
+    <!-- 1. CLIENT & VISITOR NAVBAR (Default Public Interface) -->
+    <div id="clientNavbar" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       
-      <!-- Brand & Trainee Status Badge -->
+      <!-- Brand & Read-Only Status Indicator -->
       <div class="flex items-center gap-3">
         <a href="#hero" class="flex items-center gap-2.5 group">
-          <img id="navAvatar" src="" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-navy-600/30 group-hover:ring-navy-600 transition shadow-sm">
+          <img id="navAvatar" src="profile.png" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-navy-600/30 group-hover:ring-navy-600 transition shadow-sm">
           <div class="hidden sm:block">
             <span id="navName" class="font-bold text-sm tracking-tight text-slate-900 dark:text-white block group-hover:text-navy-600 dark:group-hover:text-blue-400 transition leading-tight">Zunaid Ahmed</span>
             <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Virtual Office & Studio</span>
           </div>
         </a>
         
-        <!-- Live Status Pill (Pure Read-Only Indicator for Visitors, Clickable for Owner) -->
-        <div id="navStatusBadge" class="ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border shadow-xs transition">
+        <!-- Live Status Pill (Pure Read-Only Indicator for Visitors) -->
+        <div id="navStatusBadge" class="ml-1 sm:ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border shadow-xs transition select-none cursor-default">
           <span class="relative flex h-2 w-2">
             <span id="navStatusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
             <span id="navStatusDot" class="relative inline-flex rounded-full h-2 w-2"></span>
@@ -129,7 +131,7 @@
         </div>
       </div>
 
-      <!-- Center Nav Links (Desktop) -->
+      <!-- Center Client Nav Links (Desktop) -->
       <nav class="hidden md:flex items-center gap-1 text-xs lg:text-sm font-semibold text-slate-600 dark:text-slate-300">
         <a href="#live-lounge" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">📹 Live Cabin</a>
         <a href="#services" class="px-3 py-1.5 rounded-lg hover:text-navy-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800 transition">🛍️ Services</a>
@@ -141,9 +143,8 @@
         </a>
       </nav>
 
-      <!-- Right Action Items -->
+      <!-- Right Action Items for Visitors -->
       <div class="flex items-center gap-2">
-        
         <!-- Currency Switcher ($ USD / ৳ BDT) -->
         <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold">
           <button id="currUSD" onclick="setCurrency('USD')" class="px-2 py-1 rounded-md transition shadow-xs">USD ($)</button>
@@ -155,15 +156,146 @@
           <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
         </button>
 
-        <!-- Admin / Customize Office Drawer Toggle (HIDDEN by default, visible ONLY for Owner) -->
-        <button id="navCustomizeBtn" onclick="openAdminDrawer()" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-navy-600 hover:bg-navy-700 text-white shadow-sm hover:shadow transition active:scale-95">
-          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
-          <span class="hidden sm:inline">Customize Office</span>
+        <!-- Discreet Owner Chamber Keyhole (PIN modal) -->
+        <button onclick="openAdminLoginModal()" class="p-2 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Owner Executive Chamber (PIN: 7788)">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. OWNER / EXECUTIVE CHAMBER NAVBAR (Active ONLY in Owner Mode) -->
+    <div id="ownerNavbar" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 bg-gradient-to-r from-slate-900 via-navy-900 to-slate-950 text-white shadow-xl border-b border-amber-500/40">
+      
+      <!-- Brand & One-Click Live Chamber Status -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5">
+          <div class="relative">
+            <img id="navOwnerAvatar" src="profile.png" alt="Owner Portrait" class="w-9 h-9 rounded-full object-cover ring-2 ring-amber-400 shadow-md">
+            <span class="absolute -top-1 -right-1 text-xs select-none">👑</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-sm text-white tracking-tight leading-none">Executive Chamber</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-500 text-slate-950 uppercase tracking-wider">OWNER</span>
+            </div>
+            <span class="text-[11px] text-slate-300 font-medium">Studio Command Deck</span>
+          </div>
+        </div>
+
+        <!-- 1-Click Chamber Status Button Switcher in Header -->
+        <div class="hidden sm:flex items-center bg-black/40 p-1 rounded-xl border border-white/10 text-xs ml-2">
+          <button id="btnChamberOnline" onclick="setOfficeStatusDirect('online')" class="px-2.5 py-1 rounded-lg transition font-bold flex items-center gap-1.5 text-xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Online</span>
+          </button>
+          <button id="btnChamberDeepwork" onclick="setOfficeStatusDirect('deepwork')" class="px-2.5 py-1 rounded-lg transition font-bold flex items-center gap-1.5 text-xs text-slate-400 hover:text-white">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span>Deep Work</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Executive Workspace Controls -->
+      <nav class="hidden lg:flex items-center gap-2 text-xs font-semibold">
+        <button onclick="openWherebyHost()" class="px-3 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/30 transition flex items-center gap-1.5 active:scale-95" title="Open cabin directly as Host">
+          <i data-lucide="video" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Host Cabin</span>
+        </button>
+
+        <button onclick="openSubmissionsModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/30 transition flex items-center gap-1.5 active:scale-95" title="Review Client Inquiries & Briefs">
+          <i data-lucide="inbox" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <span>Orders & Leads</span>
+          <span id="ownerLeadsBadge" class="px-1.5 py-0.2 rounded-full bg-indigo-500 text-white text-[10px] font-bold">0</span>
+        </button>
+
+        <a href="#client-portal" class="px-3 py-1.5 rounded-lg hover:bg-white/10 text-slate-200 hover:text-white transition flex items-center gap-1.5">
+          <i data-lucide="users" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span>VIP Portals</span>
+        </a>
+
+        <button onclick="openAdminDrawer()" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition flex items-center gap-1.5 active:scale-95">
+          <i data-lucide="sliders" class="w-3.5 h-3.5 text-amber-300"></i>
+          <span>Studio Settings</span>
+        </button>
+      </nav>
+
+      <!-- Right Action Items for Owner -->
+      <div class="flex items-center gap-2">
+        <!-- Client View Preview Toggle -->
+        <button onclick="toggleClientPreview(true)" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 active:scale-95" title="Preview how clients see this page">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Preview as Client</span>
+        </button>
+
+        <!-- Lock Chamber / Logout -->
+        <button onclick="adminLogout()" class="px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 text-xs font-bold transition flex items-center gap-1 active:scale-95" title="Lock Chamber & Return to Public View">
+          <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Lock Chamber</span>
+        </button>
+
+        <!-- Dark/Light Mode -->
+        <button onclick="toggleDarkMode()" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition" title="Toggle Theme">
+          <i id="themeIconOwner" data-lucide="moon" class="w-4 h-4"></i>
         </button>
       </div>
 
     </div>
   </header>
+
+  <!-- ================= EXECUTIVE COMMAND DECK HUD (Owner Mode Only) ================= -->
+  <div id="ownerChamberHUD" class="hidden bg-slate-900 border-b border-amber-500/30 text-white text-xs py-2 px-4 shadow-lg sticky top-16 z-30 transition-all">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Left: Host Cabin & Leads Quick Actions -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-amber-400 font-bold flex items-center gap-1 text-[11px] uppercase tracking-wider">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i> Executive HUD:
+        </span>
+        <button onclick="openWherebyHost()" class="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 shadow-xs">
+          <i data-lucide="video" class="w-3.5 h-3.5"></i>
+          <span>Launch Whereby Host Cabin</span>
+        </button>
+        <button onclick="openSubmissionsModal()" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition flex items-center gap-1.5">
+          <i data-lucide="inbox" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <span>Client Briefs & Inquiries</span>
+          <span id="hudLeadsCount" class="px-1.5 py-0.2 rounded-full bg-indigo-500 text-white text-[10px] font-bold">0</span>
+        </button>
+        <button onclick="openAddClientModal()" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition flex items-center gap-1.5">
+          <i data-lucide="user-plus" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span>Add VIP Client Portal</span>
+        </button>
+      </div>
+
+      <!-- Right: 1-Click Marketing Campaign Link Generators -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <span class="text-slate-400 text-[11px] font-medium mr-1">Copy Marketing Links:</span>
+        <button onclick="copyShareLink('public')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1 text-[11px]" title="Copy clean public client link">
+          <i data-lucide="link" class="w-3 h-3 text-blue-400"></i> Public
+        </button>
+        <button onclick="copyShareLink('meta')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1 text-[11px]" title="Copy Meta / Facebook Ads tracking link">
+          <i data-lucide="target" class="w-3 h-3 text-purple-400"></i> Meta Ads
+        </button>
+        <button onclick="copyShareLink('google')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1 text-[11px]" title="Copy Google Ads tracking link">
+          <i data-lucide="search" class="w-3 h-3 text-emerald-400"></i> Google Ads
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= CLIENT PREVIEW FLOATING BANNER ================= -->
+  <div id="clientPreviewBanner" class="hidden bg-amber-500 text-slate-950 text-xs py-2 px-4 shadow-md sticky top-16 z-30 font-semibold transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="eye" class="w-4 h-4 text-slate-950"></i>
+        <span><strong>Client Preview Mode:</strong> You are viewing the studio as an outside client or visitor. All owner controls are hidden.</span>
+      </div>
+      <button onclick="toggleClientPreview(false)" class="px-3 py-1 rounded-lg bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs transition flex items-center gap-1 shadow-xs active:scale-95">
+        <i data-lucide="corner-down-left" class="w-3.5 h-3.5"></i>
+        <span>Return to Executive Chamber</span>
+      </button>
+    </div>
+  </div>
 
   <!-- ================= MAIN CONTENT CONTAINER ================= -->
   <main class="flex-grow">
@@ -870,7 +1002,9 @@
       </div>
       <div class="flex items-center gap-3">
         <span>Built with Master Virtual Office Blueprint v2.0 • 100% Confidential</span>
-        <span onclick="openAdminLoginModal()" class="cursor-default select-none text-slate-300 dark:text-slate-700 hover:text-slate-400 transition text-[10px]" title="">•</span>
+        <button onclick="openAdminLoginModal()" class="text-slate-400 hover:text-navy-600 dark:hover:text-amber-400 transition text-[11px] flex items-center gap-1 font-medium" title="Studio Owner Chamber Login">
+          <i data-lucide="lock" class="w-3 h-3"></i> Owner Login
+        </button>
       </div>
     </div>
   </footer>
@@ -1351,6 +1485,55 @@
             <button type="submit" class="px-4 py-2 rounded-lg bg-navy-600 text-white font-bold">Create VIP Portal</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ORDERS & LEADS QUEUE MODAL (Owner Mode) ================= -->
+  <div id="modalSubmissions" class="fixed inset-0 z-50 overflow-hidden hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm transition-opacity" onclick="closeSubmissionsModal()"></div>
+    <div class="fixed inset-0 z-10 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] flex flex-col">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+              <i data-lucide="inbox" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Incoming Orders & Client Briefs</span>
+                <span id="submissionsQueueCountBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">0 Total</span>
+              </h3>
+              <p class="text-xs text-slate-500">Track, manage and respond to incoming inquiries from your Order Desk</p>
+            </div>
+          </div>
+          <button onclick="closeSubmissionsModal()" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Scrollable Leads Container -->
+        <div id="submissionsListContainer" class="flex-grow overflow-y-auto space-y-3 pr-1 min-h-[240px]">
+          <!-- Rendered dynamically by JS -->
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+          <button onclick="clearAllSubmissions()" class="text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear All Leads
+          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="exportSubmissionsCSV()" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
+            </button>
+            <button onclick="closeSubmissionsModal()" class="px-4 py-1.5 rounded-lg bg-navy-600 hover:bg-navy-700 text-white font-bold transition">
+              Close
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

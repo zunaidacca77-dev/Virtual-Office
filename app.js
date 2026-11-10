@@ -10,6 +10,7 @@ let activeClientPortal = null;
 let currentFormMode = 'builtin'; // 'builtin' or 'tally'
 let currentLocalPayProvider = 'bkash';
 let currentAdSource = null;
+let isClientPreviewActive = false;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,10 +76,10 @@ function toggleDarkMode() {
 function updateThemeIcon() {
   const isDark = document.documentElement.classList.contains('dark');
   const icon = document.getElementById('themeIcon');
-  if (icon) {
-    icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-    initIcons();
-  }
+  const iconOwner = document.getElementById('themeIconOwner');
+  if (icon) icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+  if (iconOwner) iconOwner.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+  initIcons();
 }
 
 // ---------------- CURRENCY SWITCHER ----------------
@@ -244,6 +245,8 @@ function renderApp() {
   // Header & Brand
   document.getElementById('navName').textContent = p.name;
   document.getElementById('navAvatar').src = p.avatar;
+  const navOwnerAvatar = document.getElementById('navOwnerAvatar');
+  if (navOwnerAvatar) navOwnerAvatar.src = p.avatar;
   document.getElementById('footerName').textContent = p.name;
 
   // Hero Section
@@ -535,15 +538,15 @@ function setFormMode(mode) {
   const containerTally = document.getElementById('tallyEmbedContainer');
 
   if (mode === 'builtin') {
-    btnBuiltin.className = "px-3 py-1.5 rounded-lg bg-navy-600 text-white transition shadow-xs font-bold";
-    btnTally.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
-    formBuiltin.classList.remove('hidden');
-    containerTally.classList.add('hidden');
+    if (btnBuiltin) btnBuiltin.className = "px-3 py-1.5 rounded-lg bg-navy-600 text-white transition shadow-xs font-bold";
+    if (btnTally) btnTally.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+    if (formBuiltin) formBuiltin.classList.remove('hidden');
+    if (containerTally) containerTally.classList.add('hidden');
   } else {
-    btnTally.className = "px-3 py-1.5 rounded-lg bg-navy-600 text-white transition shadow-xs font-bold";
-    btnBuiltin.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
-    formBuiltin.classList.add('hidden');
-    containerTally.classList.remove('hidden');
+    if (btnTally) btnTally.className = "px-3 py-1.5 rounded-lg bg-navy-600 text-white transition shadow-xs font-bold";
+    if (btnBuiltin) btnBuiltin.className = "px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
+    if (formBuiltin) formBuiltin.classList.add('hidden');
+    if (containerTally) containerTally.classList.remove('hidden');
   }
 }
 
@@ -566,6 +569,20 @@ function handleProjectOrderSubmit(e) {
       origin: { y: 0.6 }
     });
   }
+
+  // Save inquiry to Executive Chamber Leads Queue
+  const newSubmission = {
+    id: 'SUB-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    clientName: name,
+    contact: contact,
+    package: `${pkgObj.name} (${price})`,
+    brief: brief,
+    source: currentAdSource ? (currentAdSource.includes('google') ? 'Google Ads' : currentAdSource.includes('meta') ? 'Meta Ads' : currentAdSource) : 'Direct Client'
+  };
+  const currentSubs = getSubmissions();
+  currentSubs.unshift(newSubmission);
+  saveSubmissions(currentSubs);
 
   // Show active order banner in Section 5
   const banner = document.getElementById('activeOrderInvoiceBanner');
@@ -655,18 +672,286 @@ function closeVoucherModal() {
   document.getElementById('modalVoucher').classList.add('hidden');
 }
 
-// ---------------- OWNER / ADMIN SECURITY & CAMPAIGNS ----------------
+// ---------------- OWNER / ADMIN SECURITY, DUAL NAVIGATION & CAMPAIGNS ----------------
 function isAdminLoggedIn() {
   return sessionStorage.getItem('virtual_office_admin') === 'true';
 }
 
 function updateAdminVisibility() {
+  updateDualNavigation();
+}
+
+function updateDualNavigation() {
   const isLogged = isAdminLoggedIn();
-  const navBtn = document.getElementById('navCustomizeBtn');
+  const clientNav = document.getElementById('clientNavbar');
+  const ownerNav = document.getElementById('ownerNavbar');
+  const hud = document.getElementById('ownerChamberHUD');
+  const previewBanner = document.getElementById('clientPreviewBanner');
   const floatBar = document.getElementById('adminFloatingBar');
-  if (navBtn) navBtn.classList.toggle('hidden', !isLogged);
-  if (floatBar) floatBar.classList.toggle('hidden', !isLogged);
+  const ownerAvatar = document.getElementById('navOwnerAvatar');
+
+  if (ownerAvatar && config.profile && config.profile.avatar) {
+    ownerAvatar.src = config.profile.avatar;
+  }
+
+  if (isLogged) {
+    if (isClientPreviewActive) {
+      // Owner is previewing visitor interface
+      if (clientNav) clientNav.classList.remove('hidden');
+      if (previewBanner) previewBanner.classList.remove('hidden');
+      if (ownerNav) ownerNav.classList.add('hidden');
+      if (hud) hud.classList.add('hidden');
+      if (floatBar) floatBar.classList.add('hidden');
+    } else {
+      // Owner is in Executive Chamber Deck
+      if (clientNav) clientNav.classList.add('hidden');
+      if (previewBanner) previewBanner.classList.add('hidden');
+      if (ownerNav) ownerNav.classList.remove('hidden');
+      if (hud) hud.classList.remove('hidden');
+      if (floatBar) floatBar.classList.remove('hidden');
+
+      updateChamberStatusNavButtons();
+      updateSubmissionsBadges();
+    }
+  } else {
+    // Visitor view
+    isClientPreviewActive = false;
+    if (clientNav) clientNav.classList.remove('hidden');
+    if (previewBanner) previewBanner.classList.add('hidden');
+    if (ownerNav) ownerNav.classList.add('hidden');
+    if (hud) hud.classList.add('hidden');
+    if (floatBar) floatBar.classList.add('hidden');
+  }
+
   updateStatusUI();
+  initIcons();
+}
+
+function updateChamberStatusNavButtons() {
+  const isOnline = config.profile.status === 'online';
+  const btnOnline = document.getElementById('btnChamberOnline');
+  const btnDeepwork = document.getElementById('btnChamberDeepwork');
+  if (btnOnline && btnDeepwork) {
+    if (isOnline) {
+      btnOnline.className = "px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-extrabold flex items-center gap-1.5 text-xs shadow-xs transition";
+      btnDeepwork.className = "px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold flex items-center gap-1.5 text-xs transition";
+    } else {
+      btnDeepwork.className = "px-2.5 py-1 rounded-lg bg-rose-500 text-white font-extrabold flex items-center gap-1.5 text-xs shadow-xs transition";
+      btnOnline.className = "px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-bold flex items-center gap-1.5 text-xs transition";
+    }
+  }
+}
+
+function setOfficeStatusDirect(status) {
+  config.profile.status = status;
+  saveConfigToStorage();
+  updateDualNavigation();
+  showToast(status === 'online' ? '🟢 Chamber Status: Online & Available for Meetings' : '🔴 Chamber Status: In Deep Work Session');
+}
+
+function toggleClientPreview(previewing) {
+  isClientPreviewActive = !!previewing;
+  updateDualNavigation();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(previewing ? '👁️ Switched to Client View Preview' : '👑 Returned to Executive Chamber Deck');
+}
+
+function openWherebyHost() {
+  const url = (config.meeting && config.meeting.wherebyUrl) ? config.meeting.wherebyUrl : 'https://whereby.com';
+  window.open(url, '_blank');
+  showToast('📹 Launching Whereby Host Cabin in new tab...');
+}
+
+function copyShareLink(type) {
+  const base = window.location.origin + window.location.pathname;
+  let link = base;
+  let label = 'Public Client Link';
+
+  if (type === 'meta') {
+    link = `${base}?utm_source=meta_ads`;
+    label = 'Meta Ads Tracking Link';
+  } else if (type === 'google') {
+    link = `${base}?utm_source=google_ads`;
+    label = 'Google Ads Tracking Link';
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      showToast(`📋 Copied ${label} to clipboard!`);
+    }).catch(() => {
+      prompt(`Copy this ${label}:`, link);
+    });
+  } else {
+    prompt(`Copy this ${label}:`, link);
+  }
+}
+
+// ---------------- 📥 CLIENT BRIEFS & LEADS QUEUE ----------------
+const DEFAULT_SUBMISSIONS = [
+  {
+    id: 'SUB-101',
+    date: '10 Nov 2026, 04:30 AM',
+    clientName: 'David Miller',
+    contact: 'david@fintechspark.io (+1 415-890-1234)',
+    package: 'Custom / Enterprise ($450)',
+    brief: 'Need a complete modern UI redesign for our SaaS crypto trading dashboard and responsive web app.',
+    source: 'Google Ads'
+  },
+  {
+    id: 'SUB-102',
+    date: '09 Nov 2026, 08:15 PM',
+    clientName: 'Sarah Jenkins',
+    contact: 'sarah@growthbrands.co (+44 7911 123456)',
+    package: 'Standard / Growth Pro ($150)',
+    brief: 'Rebranding and 5-page landing page design for our organic skincare eCommerce launch.',
+    source: 'Meta Ads'
+  }
+];
+
+function getSubmissions() {
+  const saved = localStorage.getItem('virtual_office_submissions');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error("Submissions parse error", e);
+    }
+  }
+  localStorage.setItem('virtual_office_submissions', JSON.stringify(DEFAULT_SUBMISSIONS));
+  return DEFAULT_SUBMISSIONS;
+}
+
+function saveSubmissions(list) {
+  localStorage.setItem('virtual_office_submissions', JSON.stringify(list));
+  updateSubmissionsBadges();
+}
+
+function updateSubmissionsBadges() {
+  const list = getSubmissions();
+  const count = list.length;
+  const badge1 = document.getElementById('ownerLeadsBadge');
+  const badge2 = document.getElementById('hudLeadsCount');
+  const badge3 = document.getElementById('submissionsQueueCountBadge');
+  if (badge1) badge1.textContent = count;
+  if (badge2) badge2.textContent = count;
+  if (badge3) badge3.textContent = `${count} Total`;
+}
+
+function openSubmissionsModal() {
+  renderSubmissionsList();
+  document.getElementById('modalSubmissions').classList.remove('hidden');
+  initIcons();
+}
+
+function closeSubmissionsModal() {
+  document.getElementById('modalSubmissions').classList.add('hidden');
+}
+
+function renderSubmissionsList() {
+  const container = document.getElementById('submissionsListContainer');
+  if (!container) return;
+
+  const list = getSubmissions();
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="py-12 text-center text-slate-400">
+        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+        <p class="font-bold text-sm">No incoming inquiries or orders yet</p>
+        <p class="text-xs">When visitors submit project briefs from the Order Desk, they will appear here.</p>
+      </div>
+    `;
+    initIcons();
+    return;
+  }
+
+  container.innerHTML = list.map((item) => `
+    <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 transition space-y-2">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-900 dark:text-white text-sm">${item.clientName}</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.source === 'Google Ads' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : item.source === 'Meta Ads' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'}">
+            ${item.source || 'Direct Client'}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+          <span>${item.date}</span>
+          <button onclick="deleteSubmission('${item.id}')" class="text-slate-400 hover:text-rose-500 p-1" title="Delete Inquiry">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
+        <div>
+          <span class="text-slate-400">Contact:</span> <strong class="text-slate-800 dark:text-slate-100">${item.contact}</strong>
+        </div>
+        <div>
+          <span class="text-slate-400">Package:</span> <span class="font-bold text-indigo-600 dark:text-indigo-400">${item.package}</span>
+        </div>
+      </div>
+
+      <div class="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 font-sans">
+        "${item.brief}"
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button onclick="contactClientDirect('${encodeURIComponent(item.contact)}', '${encodeURIComponent(item.clientName)}')" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-xs">
+          <i data-lucide="message-circle" class="w-3 h-3"></i> Reply via WhatsApp
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  initIcons();
+}
+
+function deleteSubmission(id) {
+  let list = getSubmissions();
+  list = list.filter(item => item.id !== id);
+  saveSubmissions(list);
+  renderSubmissionsList();
+  showToast('Inquiry removed from queue');
+}
+
+function clearAllSubmissions() {
+  if (confirm('Clear all inquiries from your queue?')) {
+    saveSubmissions([]);
+    renderSubmissionsList();
+    showToast('Leads queue cleared');
+  }
+}
+
+function contactClientDirect(encodedContact, encodedName) {
+  const contact = decodeURIComponent(encodedContact);
+  const name = decodeURIComponent(encodedName);
+  const digits = contact.replace(/\D/g, '');
+  const greeting = encodeURIComponent(`Hello ${name}, thank you for your project brief at my Virtual Office! I am Zunaid Ahmed, let's discuss details.`);
+  if (digits.length >= 7) {
+    window.open(`https://wa.me/${digits}?text=${greeting}`, '_blank');
+  } else {
+    window.open(`mailto:${contact}?subject=Regarding Your Virtual Office Project Inquiry&body=${greeting}`, '_blank');
+  }
+}
+
+function exportSubmissionsCSV() {
+  const list = getSubmissions();
+  if (list.length === 0) {
+    showToast('No leads to export');
+    return;
+  }
+  let csv = 'ID,Date,Client Name,Contact,Package,Source,Brief\n';
+  list.forEach(i => {
+    csv += `"${i.id}","${i.date}","${i.clientName.replace(/"/g, '""')}","${i.contact.replace(/"/g, '""')}","${i.package}","${i.source}","${(i.brief||'').replace(/"/g, '""')}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Virtual_Office_Leads_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('📥 CSV export downloaded!');
 }
 
 function openAdminLoginModal() {
@@ -689,9 +974,8 @@ function handleAdminLogin(e) {
   if (enteredPin === correctPin) {
     sessionStorage.setItem('virtual_office_admin', 'true');
     closeAdminLoginModal();
-    updateAdminVisibility();
-    openAdminDrawer();
-    showToast("👑 Owner Mode Unlocked! All settings enabled.");
+    updateDualNavigation();
+    showToast("👑 Owner Mode Unlocked! Welcome to your Executive Chamber.");
   } else {
     const err = document.getElementById('adminLoginError');
     err.textContent = "❌ Invalid PIN. Please try again.";
@@ -702,7 +986,7 @@ function handleAdminLogin(e) {
 function adminLogout() {
   sessionStorage.removeItem('virtual_office_admin');
   closeAdminDrawer();
-  updateAdminVisibility();
+  updateDualNavigation();
   showToast("🔒 Exited Owner Mode. You are now in Public Client View.");
 }
 
