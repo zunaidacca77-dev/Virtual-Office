@@ -57,14 +57,27 @@ function loadConfig() {
       if (!config.profile.title || config.profile.title.includes('UI/UX')) {
         config.profile.title = 'Cloud Accounting Specialist';
       }
+      if (!config.profile.bio || config.profile.bio.includes('digital interfaces') || config.profile.bio.includes('design systems')) {
+        config.profile.bio = DEFAULT_CONFIG.profile.bio;
+      }
       if (!config.ads) {
         config.ads = JSON.parse(JSON.stringify(DEFAULT_CONFIG.ads));
       }
-      if (!config.portfolio || !Array.isArray(config.portfolio) || config.portfolio.length === 0) {
+      // Migrate packages to Cloud Accounting if legacy
+      if (!config.packages || !Array.isArray(config.packages) || config.packages.length === 0 || config.packages.some(pkg => (pkg.features || []).some(f => f.includes('Landing Page') || f.includes('Figma')))) {
+        config.packages = JSON.parse(JSON.stringify(DEFAULT_CONFIG.packages));
+      }
+      // Migrate portfolio to Cloud Accounting if legacy UI/UX
+      if (!config.portfolio || !Array.isArray(config.portfolio) || config.portfolio.length === 0 || config.portfolio.some(p => p.category === 'uiux' || p.category === 'webdev' || (p.title && p.title.includes('FinFlow')))) {
         config.portfolio = JSON.parse(JSON.stringify(DEFAULT_CONFIG.portfolio));
       }
-      if (!config.packages || !Array.isArray(config.packages) || config.packages.length === 0) {
-        config.packages = JSON.parse(JSON.stringify(DEFAULT_CONFIG.packages));
+      // Migrate clientPortals to Cloud Accounting if legacy
+      if (!config.clientPortals || config.clientPortals.some(c => c.projectTitle && c.projectTitle.includes('Mobile UI'))) {
+        config.clientPortals = JSON.parse(JSON.stringify(DEFAULT_CONFIG.clientPortals));
+      }
+      // Migrate AI assistant prompt if legacy
+      if (!config.aiDesk || !config.aiDesk.systemPrompt || !config.aiDesk.systemPrompt.includes('Accounting')) {
+        config.aiDesk = JSON.parse(JSON.stringify(DEFAULT_CONFIG.aiDesk));
       }
       saveConfigToStorage();
     } catch (e) {
@@ -599,9 +612,9 @@ function generateAIResponse(query) {
   // 4. Portfolio / Past Work / Experience
   else if (q.includes('portfolio') || q.includes('sample') || q.includes('work') || q.includes('experience') || q.includes('পোর্টফোলিও') || q.includes('কাজ') || q.includes('স্যাম্পল') || q.includes('অভিজ্ঞতা')) {
     if (isBengali) {
-      return `আমাদের সাম্প্রতিক কাজের কেস স্টাডি ও লাইভ ডেমো দেখতে নিচের <strong>Portfolio Section</strong> ভিজিট করুন। FinFlow, LuxeAura সহ একাধিক সফল প্রজেক্টের লাইভ রেজাল্ট সেখানে প্রদর্শিত আছে।`;
+      return `আমাদের সাম্প্রতিক ক্লাউড অ্যাকাউন্টিং কেস স্টাডি ও ক্লায়েন্ট রেজাল্ট দেখতে নিচের <strong>Portfolio Section</strong> ভিজিট করুন। QuickBooks Online Cleanup, Xero Multi-Currency Setup, এবং Shopify eCommerce Bookkeeping সহ একাধিক সফল প্রজেক্টের লাইভ ফলাফল সেখানে প্রদর্শিত আছে।`;
     }
-    return `You can explore our verified client case studies and live interactive UI demos right below in the <strong>Portfolio Section</strong>, including FinFlow Mobile UI, LuxeAura, and NovaCRM.`;
+    return `You can explore our verified client accounting case studies right below in the <strong>Portfolio Section</strong>, including multi-year QuickBooks Online cleanup, Xero multi-currency setup, and Shopify eCommerce bookkeeping.`;
   }
 
   // 5. Brief / Project Order / Hire
@@ -1366,8 +1379,8 @@ const DEFAULT_SUBMISSIONS = [
     date: '10 Nov 2026, 04:30 AM',
     clientName: 'David Miller',
     contact: 'david@fintechspark.io (+1 415-890-1234)',
-    package: 'Custom / Enterprise ($450)',
-    brief: 'Need a complete modern UI redesign for our SaaS crypto trading dashboard and responsive web app.',
+    package: 'CFO Advisory & Catch-Up Cleanup ($450)',
+    brief: 'We need 2 years of backlog QuickBooks Online cleanup and reconciliations for 4 business checking accounts before CPA tax filing.',
     source: 'Google Ads'
   },
   {
@@ -1375,8 +1388,8 @@ const DEFAULT_SUBMISSIONS = [
     date: '09 Nov 2026, 08:15 PM',
     clientName: 'Sarah Jenkins',
     contact: 'sarah@growthbrands.co (+44 7911 123456)',
-    package: 'Standard / Growth Pro ($150)',
-    brief: 'Rebranding and 5-page landing page design for our organic skincare eCommerce launch.',
+    package: 'Growth Business Accounting ($150)',
+    brief: 'Monthly bookkeeping, multi-currency Stripe/Shopify sync, and automated bank feed categorization with monthly P&L reports.',
     source: 'Meta Ads'
   }
 ];
@@ -1385,7 +1398,10 @@ function getSubmissions() {
   const saved = localStorage.getItem('virtual_office_submissions');
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].brief.includes('crypto trading')) {
+        return parsed;
+      }
     } catch (e) {
       console.error("Submissions parse error", e);
     }
@@ -1577,7 +1593,7 @@ const DEFAULT_PAYMENTS = [
     senderNumber: "01712-345678",
     trxId: "9K82JDLA7X",
     amount: "৳15,000 ($150 USD)",
-    package: "Standard / Growth Pro",
+    package: "Growth Business Accounting",
     status: "pending",
     date: "10 Nov 2026, 05:40 AM"
   },
@@ -1589,7 +1605,7 @@ const DEFAULT_PAYMENTS = [
     senderNumber: "david@apexventures.io",
     trxId: "ch_3M48xKL92019482",
     amount: "$450 USD (৳45,000)",
-    package: "Custom / Enterprise",
+    package: "CFO Advisory & Catch-Up Cleanup",
     status: "pending",
     date: "09 Nov 2026, 11:20 PM"
   }
@@ -1602,9 +1618,9 @@ const DEFAULT_AI_CHATS = [
     visitorName: "Michael Thorne",
     contact: "+1 646 555 0192",
     source: "Live Cabin AI Assistant",
-    userQuery: "Can Zunaid deliver a 5-page SaaS landing page in Figma with design tokens by next Monday?",
-    aiReply: "Yes! Zunaid provides high-fidelity Figma files with complete design tokens. The Standard package ($150 / ৳15,000) delivers in 5-7 days with unlimited revisions. You can place your brief below or knock on the Live Cabin.",
-    intent: "High Value Lead",
+    userQuery: "We have 18 months of un-reconciled transactions in QuickBooks Online. Can Zunaid clean up our books before tax season?",
+    aiReply: "Absolutely! Zunaid specializes in multi-year QuickBooks and Xero cleanup & catch-up bookkeeping. All accounts, bank feeds, and AP/AR will be balanced and tax-ready. You can place your brief below or knock on the Live Cabin.",
+    intent: "High Value Lead (Cleanup)",
     time: "10 Nov 2026, 05:15 AM"
   },
   {
@@ -1612,9 +1628,9 @@ const DEFAULT_AI_CHATS = [
     visitorName: "Tanvir Ahmed",
     contact: "01819-876543",
     source: "Meta Ads Campaign Visitor",
-    userQuery: "ভাইয়া bKash এ পেমেন্ট করে কি সরাসরি প্রজেক্ট শুরু করা যাবে?",
-    aiReply: "হ্যাঁ, অবশ্যই! আপনি বিলিং সেকশন থেকে bKash Send Money করে TrxID সাবমিট করলেই জুনাইদ আহমেদ আপনার কাজ শুরু করে আপনার ডেডিকেটেড ভিআইপি পোর্টাল লিংক প্রদান করবেন।",
-    intent: "Ready to Pay (Local)",
+    userQuery: "ভাইয়া আমাদের ই-কমার্স বিজনেসের জন্য মান্থলি বুককিপিং আর ব্যাংক রিকনসিলিয়েশন সার্ভিস লাগবে, প্যাকেজ কোনটা নেবো?",
+    aiReply: "ই-কমার্স বা গ্রোথ বিজনেসের জন্য Zunaid-এর 'Growth Business Accounting' ($150 / ৳15,000) প্যাকেজটি সেরা। এতে শপিফাই, স্ট্রাইপ ও ব্যাংক রিকনসিলিয়েশন সহ ক্যাশ ফ্লো রিপোর্ট অন্তর্ভুক্ত রয়েছে।",
+    intent: "Ready to Order",
     time: "09 Nov 2026, 09:30 PM"
   }
 ];
@@ -1623,7 +1639,10 @@ function getPaymentQueue() {
   const saved = localStorage.getItem('virtual_office_payments');
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].package.includes('Standard / Growth Pro')) {
+        return parsed;
+      }
     } catch (e) {
       console.error("Payment parse error", e);
     }
@@ -1642,7 +1661,10 @@ function getAiChatLogs() {
   const saved = localStorage.getItem('virtual_office_ai_chats');
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].userQuery.includes('Figma')) {
+        return parsed;
+      }
     } catch (e) {
       console.error("AI chats parse error", e);
     }
@@ -1750,7 +1772,7 @@ function renderWorkspacePortals() {
       <!-- Google Drive Deliverables URL & Live File Handoff -->
       <div class="space-y-2">
         <label class="block text-xs font-bold text-slate-600 dark:text-slate-400">
-          Client Deliverables Link (Google Drive / Figma / Dropbox):
+          Client Deliverables Link (Google Drive / Secure Cloud Folder):
         </label>
         <div class="flex items-center gap-2">
           <div class="flex-grow relative">
@@ -2313,6 +2335,12 @@ function populateAdminFields() {
   document.getElementById('cfgResponseTime').value = p.responseTime || '';
   document.getElementById('cfgRating').value = p.rating || '';
 
+  // Update image previews
+  const elAvatarPreview = document.getElementById('cfgAvatarPreview');
+  if (elAvatarPreview) elAvatarPreview.src = p.avatar || 'profile.png?v=4';
+  const elCoverPreview = document.getElementById('cfgCoverPreview');
+  if (elCoverPreview) elCoverPreview.src = p.cover || '';
+
   // Meetings
   document.getElementById('cfgWherebyUrl').value = config.meeting.wherebyUrl || '';
   document.getElementById('cfgCalUrl').value = config.meeting.calUrl || '';
@@ -2404,6 +2432,8 @@ function populateAdminFields() {
   document.getElementById('cfgBkashNumber').value = config.payments.bkashNumber || '';
   document.getElementById('cfgNagadNumber').value = config.payments.nagadNumber || '';
   document.getElementById('cfgQrCodeUrl').value = config.payments.qrCodeUrl || '';
+  const elQrPreview = document.getElementById('cfgQrCodePreview');
+  if (elQrPreview) elQrPreview.src = config.payments.qrCodeUrl || '';
 
   // Security Master PIN
   document.getElementById('cfgAdminPin').value = (config.security && config.security.adminPin) ? config.security.adminPin : "7788";
@@ -2709,12 +2739,23 @@ function openAddPortfolioModal() {
   document.getElementById('portModalHeader').textContent = 'Add New Portfolio Project';
   document.getElementById('portEditId').value = '';
   document.getElementById('portEditTitle').value = '';
-  document.getElementById('portEditCategory').value = 'accounting';
-  document.getElementById('portEditCategoryLabel').value = 'Cloud Accounting & Tax';
+  document.getElementById('portEditCategory').value = 'quickbooks';
+  document.getElementById('portEditCategoryLabel').value = 'QuickBooks Online & Xero';
   document.getElementById('portEditImage').value = '';
   document.getElementById('portEditResults').value = '';
   document.getElementById('portEditTools').value = '';
   document.getElementById('portEditDesc').value = '';
+
+  const portImg = document.getElementById('portEditImagePreview');
+  const portPlace = document.getElementById('portEditImagePlaceholder');
+  if (portImg) {
+    portImg.src = '';
+    portImg.classList.add('hidden');
+  }
+  if (portPlace) {
+    portPlace.classList.remove('hidden');
+  }
+
   document.getElementById('modalEditPortfolio').classList.remove('hidden');
   initIcons();
 }
@@ -2725,12 +2766,25 @@ function editPortfolioItem(id) {
   document.getElementById('portModalHeader').textContent = `Edit Project: ${item.title}`;
   document.getElementById('portEditId').value = item.id;
   document.getElementById('portEditTitle').value = item.title || '';
-  document.getElementById('portEditCategory').value = item.category || 'accounting';
+  document.getElementById('portEditCategory').value = item.category || 'quickbooks';
   document.getElementById('portEditCategoryLabel').value = item.categoryLabel || '';
   document.getElementById('portEditImage').value = item.image || '';
   document.getElementById('portEditResults').value = item.results || '';
   document.getElementById('portEditTools').value = Array.isArray(item.tools) ? item.tools.join(', ') : (item.tools || '');
   document.getElementById('portEditDesc').value = item.description || '';
+
+  const portImg = document.getElementById('portEditImagePreview');
+  const portPlace = document.getElementById('portEditImagePlaceholder');
+  if (portImg && item.image) {
+    portImg.src = item.image;
+    portImg.classList.remove('hidden');
+    if (portPlace) portPlace.classList.add('hidden');
+  } else if (portImg) {
+    portImg.src = '';
+    portImg.classList.add('hidden');
+    if (portPlace) portPlace.classList.remove('hidden');
+  }
+
   document.getElementById('modalEditPortfolio').classList.remove('hidden');
   initIcons();
 }
@@ -2898,6 +2952,83 @@ function trackLeadConversion(source, value) {
   } catch (e) {
     console.warn('Ad conversion tracking error', e);
   }
+}
+
+// ---------------- 🖼️ DIRECT COMPUTER IMAGE UPLOAD HANDLER ----------------
+function handleLocalImageUpload(event, targetInputId, previewImgId, maxDim = 800) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToast('❌ Please select an image file (PNG, JPG, WEBP)');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const rawDataUrl = e.target.result;
+
+    const img = new Image();
+    img.onload = function() {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Compressed JPEG data URL
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+      const targetInput = document.getElementById(targetInputId);
+      if (targetInput) {
+        targetInput.value = compressedDataUrl;
+      }
+      const previewImg = document.getElementById(previewImgId);
+      if (previewImg) {
+        previewImg.src = compressedDataUrl;
+        previewImg.classList.remove('hidden');
+      }
+      const placeholder = document.getElementById(previewImgId.replace('Preview', 'Placeholder'));
+      if (placeholder) {
+        placeholder.classList.add('hidden');
+      }
+
+      showToast('📸 Image loaded from computer successfully!');
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateImagePreview(inputId, previewImgId) {
+  const val = document.getElementById(inputId).value.trim();
+  const preview = document.getElementById(previewImgId);
+  if (preview && val) {
+    preview.src = val;
+    preview.classList.remove('hidden');
+    const placeholder = document.getElementById(previewImgId.replace('Preview', 'Placeholder'));
+    if (placeholder) placeholder.classList.add('hidden');
+  }
+}
+
+function resetToDefaultAvatar() {
+  document.getElementById('cfgAvatar').value = 'profile.png?v=4';
+  const preview = document.getElementById('cfgAvatarPreview');
+  if (preview) preview.src = 'profile.png?v=4';
+  showToast('Profile picture reset to official studio portrait.');
 }
 
 // ---------------- UTILS & TOASTS ----------------
