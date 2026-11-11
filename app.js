@@ -162,7 +162,7 @@ function loadConfig() {
       // Auto-migrate avatar to local high-res portrait with cache buster
       if (!config.profile) config.profile = {};
       if (!config.profile.avatar || config.profile.avatar.includes('profile.png')) {
-        config.profile.avatar = 'profile.png?v=7';
+        config.profile.avatar = 'profile.png?v=8';
       }
       if (!config.profile.name || config.profile.name === 'Zunaid Ahmed') {
         config.profile.name = 'Zunaid Hasan';
@@ -2452,7 +2452,7 @@ function populateAdminFields() {
 
   // Update image previews
   const elAvatarPreview = document.getElementById('cfgAvatarPreview');
-  if (elAvatarPreview) elAvatarPreview.src = p.avatar || 'profile.png?v=7';
+  if (elAvatarPreview) elAvatarPreview.src = p.avatar || 'profile.png?v=8';
   const elCoverPreview = document.getElementById('cfgCoverPreview');
   if (elCoverPreview) elCoverPreview.src = p.cover || '';
 
@@ -3140,9 +3140,9 @@ function updateImagePreview(inputId, previewImgId) {
 }
 
 function resetToDefaultAvatar() {
-  document.getElementById('cfgAvatar').value = 'profile.png?v=7';
+  document.getElementById('cfgAvatar').value = 'profile.png?v=8';
   const preview = document.getElementById('cfgAvatarPreview');
-  if (preview) preview.src = 'profile.png?v=7';
+  if (preview) preview.src = 'profile.png?v=8';
   showToast('Profile picture reset to official studio portrait.');
 }
 
